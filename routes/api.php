@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AnakAsuhController;
 use App\Http\Controllers\Api\InventarisController;
 use App\Http\Controllers\Api\DonasiController;
 use App\Http\Controllers\Api\TransaksiKeuanganController;
+use App\Http\Controllers\Api\KunjunganController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -39,8 +40,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/transaksi', [TransaksiKeuanganController::class, 'index']);
     Route::post('/transaksi', [TransaksiKeuanganController::class, 'store']);
     Route::get('/kas/saldo', [TransaksiKeuanganController::class, 'saldo']);
+    
+    // Kunjungan (Terlindungi)
+    Route::get('/kunjungan', [KunjunganController::class, 'index']);
+    Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
+    Route::post('/kunjungan/{id}/approve', [KunjunganController::class, 'approve']);
+    Route::post('/kunjungan/{id}/reject', [KunjunganController::class, 'reject']);
 });
 
 // Endpoint publik untuk Donatur membuat donasi (di luar auth)
 Route::post('/donasi', [DonasiController::class, 'store']);
+
+// Endpoint publik untuk pendaftaran tamu Kunjungan
+Route::post('/kunjungan', [KunjunganController::class, 'store']);
 
