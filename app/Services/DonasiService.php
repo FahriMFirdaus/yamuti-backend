@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Donasi;
+use App\Models\TransaksiKeuangan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class DonasiService extends BaseService
+{
+    public function getAllDonasi(int $perPage = 15): LengthAwarePaginator
+    {
+        return Donasi::latest()->paginate($perPage);
+    }
+
+    public function getDonasiById(string $id): Donasi
+    {
+        return Donasi::findOrFail($id);
+    }
+
+    public function createDonasi(array $data, ?string $userId = null): Donasi
+    {
+        $data['user_id'] = $userId;
+        $data['status'] = 'PENDING';
+        return Donasi::create($data);
+    }
+
+    public function updateStatus(string $id, string $status): Donasi
+    {
+        return DB::transaction(function () use ($id, $status) {
+            $donasi = Donasi::findOrFail($id);
+            
+            // Logika Otomatis: Jika status berubah jadi PAID untuk pertama kali, jalankan Split Rule
+            if ($donasi->status !== 'PAID' && $status === 'PAID') {
+                $donasi->update(['status' => 'PAID']);
+                $this->applySplitRule($donasi);
+            } else {
+                $donasi->update(['status' => $status]);
+            }
+
+            return $donasi;
+        });
+    }
+
+    protected function applySplitRule(Donasi $donasi): void
+    {
+        $nominal = $donasi->gross_amount;
+        $pusat = $nominal * 0.10; // 10% masuk ke Kas Pusat
+        $cabang = $nominal * 0.90; // 90% masuk ke Kas Cabang
+
+        // Mencatat Pemasukan Kas Pusat
+        TransaksiKeuangan::create([
+            'jenis_kas' => 'Pusat',
+            'tipe_transaksi' => 'Debit',
+            'nominal' => $pusat,
+            'deskripsi' => 'Alokasi 10% dari Donasi oleh ' . $donasi->nama_donatur,
+            'donasi_id' => $donasi->id,
+        ]);
+
+        // Mencatat Pemasukan Kas Cabang
+        TransaksiKeuangan::create([
+            'jenis_kas' => 'Cabang',
+            'tipe_transaksi' => 'Debit',
+            'nominal' => $cabang,
+            'deskripsi' => 'Alokasi 90% dari Donasi oleh ' . $donasi->nama_donatur,
+            'donasi_id' => $donasi->id,
+        ]);
+    }
+}
