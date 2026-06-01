@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\AnakAsuhController;
+use App\Http\Controllers\Api\InventarisController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -22,5 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/roles/{id}', [RoleController::class, 'show']);
     Route::put('/roles/{id}', [RoleController::class, 'update']);
     Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+
+    // Core Business Logic
+    Route::apiResource('anak-asuh', AnakAsuhController::class);
+    Route::apiResource('inventaris', InventarisController::class);
 });
 
