@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Endpoint publik untuk Donatur membuat donasi (di luar auth)
 Route::post('/donasi', [DonasiController::class, 'store']);
+Route::post('/midtrans/webhook', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
 
 // Endpoint publik untuk pendaftaran tamu Kunjungan
 Route::post('/kunjungan', [KunjunganController::class, 'store']);

@@ -18,7 +18,9 @@ class Donasi extends Model
         'gross_amount',
         'status',
         'payment_type',
-        'transaction_id'
+        'transaction_id',
+        'snap_token',
+        'payment_url'
     ];
 
     public function transaksiKeuangan()
