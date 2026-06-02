@@ -1,0 +1,21 @@
+meta {
+  name: Login Admin
+  type: http
+  seq: 1
+}
+post {
+  url: {{base_url}}/api/login
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "email": "admin@yamuti.org",
+    "password": "password"
+  }
+}
+script:post-response {
+  if(res.status === 200) {
+    bru.setEnvVar("token", res.body.data.token);
+  }
+}
