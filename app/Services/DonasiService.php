@@ -23,7 +23,28 @@ class DonasiService extends BaseService
     {
         $data['user_id'] = $userId;
         $data['status'] = 'PENDING';
-        return Donasi::create($data);
+        
+        $donasi = Donasi::create($data);
+
+        // Integrasi Midtrans
+        $midtransService = new MidtransService();
+        $midtransData = $midtransService->createTransaction([
+            'transaction_details' => [
+                'order_id' => $donasi->id,
+                'gross_amount' => $donasi->gross_amount,
+            ],
+            'customer_details' => [
+                'first_name' => $donasi->nama_donatur,
+                'phone' => $donasi->no_whatsapp,
+            ]
+        ]);
+
+        $donasi->update([
+            'snap_token' => $midtransData['snap_token'],
+            'payment_url' => $midtransData['payment_url']
+        ]);
+
+        return $donasi;
     }
 
     public function updateStatus(string $id, string $status): Donasi
