@@ -1,0 +1,13 @@
+meta {
+  name: List Donasi
+  type: http
+  seq: 2
+}
+get {
+  url: {{base_url}}/api/donasi
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

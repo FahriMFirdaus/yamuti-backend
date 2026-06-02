@@ -1,0 +1,13 @@
+meta {
+  name: Cek Saldo Cabang
+  type: http
+  seq: 1
+}
+get {
+  url: {{base_url}}/api/kas/saldo?jenis_kas=Cabang
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

@@ -31,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Core Business Logic
     Route::apiResource('anak-asuh', AnakAsuhController::class);
     Route::apiResource('inventaris', InventarisController::class);
+    Route::get('inventaris/{inventaris}/mutasi', [\App\Http\Controllers\Api\MutasiBarangController::class, 'index']);
+    Route::post('inventaris/{inventaris}/mutasi', [\App\Http\Controllers\Api\MutasiBarangController::class, 'store']);
 
     // Donasi & Kas
     Route::get('/donasi', [DonasiController::class, 'index']);

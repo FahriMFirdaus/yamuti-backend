@@ -1,0 +1,13 @@
+meta {
+  name: List Inventaris
+  type: http
+  seq: 1
+}
+get {
+  url: {{base_url}}/api/inventaris
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

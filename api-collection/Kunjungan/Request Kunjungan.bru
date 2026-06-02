@@ -1,0 +1,19 @@
+meta {
+  name: Buat Janji Kunjungan
+  type: http
+  seq: 1
+}
+post {
+  url: {{base_url}}/api/kunjungan
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "nama_tamu": "Rombongan Donatur",
+    "no_whatsapp": "089988776655",
+    "jumlah_pengunjung": 5,
+    "maksud": "Menyalurkan donasi pakaian",
+    "slot_waktu": "2026-12-12"
+  }
+}

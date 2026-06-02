@@ -1,0 +1,13 @@
+meta {
+  name: Riwayat Mutasi
+  type: http
+  seq: 3
+}
+get {
+  url: {{base_url}}/api/inventaris/1/mutasi
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
