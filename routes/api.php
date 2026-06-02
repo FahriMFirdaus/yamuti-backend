@@ -13,6 +13,16 @@ use App\Http\Controllers\Api\KunjunganController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/setup-db', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        return "Database migration and seeding completed successfully!";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
