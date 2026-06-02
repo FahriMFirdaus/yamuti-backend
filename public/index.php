@@ -10,6 +10,10 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
     require $maintenance;
 }
 
+putenv('APP_DEBUG=true');
+$_ENV['APP_DEBUG'] = true;
+$_SERVER['APP_DEBUG'] = true;
+
 // Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
 
