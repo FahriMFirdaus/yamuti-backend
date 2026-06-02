@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Donasi;
 use App\Models\TransaksiKeuangan;
+use App\Jobs\SendWhatsAppMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -56,6 +57,12 @@ class DonasiService extends BaseService
             if ($donasi->status !== 'PAID' && $status === 'PAID') {
                 $donasi->update(['status' => 'PAID']);
                 $this->applySplitRule($donasi);
+                
+                // Kirim notifikasi WA
+                if ($donasi->no_whatsapp) {
+                    $pesan = "Alhamdulillah, donasi Anda sebesar Rp" . number_format($donasi->gross_amount, 0, ',', '.') . " telah kami terima. Jazakumullah khairan katsiran.";
+                    SendWhatsAppMessage::dispatch($donasi->no_whatsapp, $pesan);
+                }
             } else {
                 $donasi->update(['status' => $status]);
             }
