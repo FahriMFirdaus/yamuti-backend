@@ -6,6 +6,7 @@ use App\Models\Inventaris;
 use App\Models\MutasiBarang;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use App\Events\PengadaanBarangDibuat;
 use Exception;
 
 class MutasiBarangService extends BaseService
@@ -38,7 +39,14 @@ class MutasiBarangService extends BaseService
             $data['inventaris_id'] = $inventaris->id;
             $data['created_by'] = $userId;
             
-            return MutasiBarang::create($data);
+            $mutasi = MutasiBarang::create($data);
+            
+            // Trigger Event Task 3.2.2 jika pengadaan barang baru (tipe: masuk)
+            if ($data['tipe'] === 'masuk') {
+                event(new PengadaanBarangDibuat($mutasi));
+            }
+            
+            return $mutasi;
         });
     }
 }
