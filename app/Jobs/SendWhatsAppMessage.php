@@ -40,26 +40,32 @@ class SendWhatsAppMessage implements ShouldQueue
      */
     public function handle(): void
     {
-        // Hubungi Microservice Baileys Node.js
-        // Diasumsikan microservice berjalan di internal jaringan atau via URL tertentu
-        $baileysUrl = env('WA_MICROSERVICE_URL', 'http://localhost:3000');
+        // Menggunakan Fonnte API sebagai Third-Party WA Gateway (Pengganti Baileys)
+        $token = env('FONNTE_TOKEN');
+        
+        if (!$token) {
+            Log::warning('Fonnte token tidak ditemukan, pesan WA tidak dikirim.');
+            return;
+        }
         
         try {
-            $response = Http::timeout(10)->post("{$baileysUrl}/send-message", [
-                'phone' => $this->phone,
+            $response = Http::withHeaders([
+                'Authorization' => $token
+            ])->timeout(10)->post("https://api.fonnte.com/send", [
+                'target' => $this->phone,
                 'message' => $this->message,
             ]);
 
             if (!$response->successful()) {
-                Log::error('Gagal mengirim WhatsApp', [
+                Log::error('Gagal mengirim WhatsApp via Fonnte', [
                     'phone' => $this->phone,
                     'status' => $response->status(),
                     'response' => $response->body()
                 ]);
-                $this->fail(new \Exception('WA Microservice returned error: ' . $response->status()));
+                $this->fail(new \Exception('Fonnte API returned error: ' . $response->status()));
             }
         } catch (\Exception $e) {
-            Log::error('Exception saat mengirim WhatsApp', [
+            Log::error('Exception saat mengirim WhatsApp via Fonnte', [
                 'phone' => $this->phone,
                 'error' => $e->getMessage()
             ]);
