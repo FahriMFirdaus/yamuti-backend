@@ -41,8 +41,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Core Business Logic
     Route::apiResource('anak-asuh', AnakAsuhController::class);
     Route::apiResource('inventaris', InventarisController::class);
-    Route::get('inventaris/{inventaris}/mutasi', [\App\Http\Controllers\Api\MutasiBarangController::class, 'index']);
-    Route::post('inventaris/{inventaris}/mutasi', [\App\Http\Controllers\Api\MutasiBarangController::class, 'store']);
+    Route::apiResource('mutasi-barang', App\Http\Controllers\Api\MutasiBarangController::class);
+    Route::apiResource('transaksi-keuangan', App\Http\Controllers\Api\TransaksiKeuanganController::class);
+    
+    // Epic 3.1: Artikel & Galeri
+    Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class);
+    Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['update']);
 
     // Donasi & Kas
     Route::get('/donasi', [DonasiController::class, 'index']);
