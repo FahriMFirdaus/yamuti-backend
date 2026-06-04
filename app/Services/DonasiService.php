@@ -74,15 +74,15 @@ class DonasiService extends BaseService
     protected function applySplitRule(Donasi $donasi): void
     {
         $nominal = $donasi->gross_amount;
-        $pusat = $nominal * 0.10; // 10% masuk ke Kas Pusat
-        $cabang = $nominal * 0.90; // 90% masuk ke Kas Cabang
+        $cabang = $nominal * 0.10; // 10% masuk ke Kas Cabang (Hak Amilin/Operasional)
+        $pusat = $nominal * 0.90; // 90% masuk ke Kas Pusat
 
         // Mencatat Pemasukan Kas Pusat
         TransaksiKeuangan::create([
             'jenis_kas' => 'Pusat',
             'tipe_transaksi' => 'Debit',
             'nominal' => $pusat,
-            'deskripsi' => 'Alokasi 10% dari Donasi oleh ' . $donasi->nama_donatur,
+            'deskripsi' => 'Alokasi 90% dari Donasi oleh ' . $donasi->nama_donatur,
             'donasi_id' => $donasi->id,
         ]);
 
@@ -91,7 +91,7 @@ class DonasiService extends BaseService
             'jenis_kas' => 'Cabang',
             'tipe_transaksi' => 'Debit',
             'nominal' => $cabang,
-            'deskripsi' => 'Alokasi 90% dari Donasi oleh ' . $donasi->nama_donatur,
+            'deskripsi' => 'Alokasi 10% dari Donasi oleh ' . $donasi->nama_donatur,
             'donasi_id' => $donasi->id,
         ]);
     }
