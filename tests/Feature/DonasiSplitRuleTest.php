@@ -34,19 +34,19 @@ class DonasiSplitRuleTest extends TestCase
         // 3. Assert: Pastikan ada 2 record di TransaksiKeuangan (1 Pusat, 1 Cabang)
         $this->assertDatabaseCount('transaksi_keuangans', 2);
 
-        // Pusat 10% dari 1 juta = 100000
+        // Pusat 90% dari 1 juta = 900000
         $this->assertDatabaseHas('transaksi_keuangans', [
             'jenis_kas' => 'Pusat',
             'tipe_transaksi' => 'Debit',
-            'nominal' => 100000,
+            'nominal' => 900000,
             'donasi_id' => $donasi->id,
         ]);
 
-        // Cabang 90% dari 1 juta = 900000
+        // Cabang 10% dari 1 juta = 100000 (sebagai biaya operasional/hak amilin)
         $this->assertDatabaseHas('transaksi_keuangans', [
             'jenis_kas' => 'Cabang',
             'tipe_transaksi' => 'Debit',
-            'nominal' => 900000,
+            'nominal' => 100000,
             'donasi_id' => $donasi->id,
         ]);
 
