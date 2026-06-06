@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\InventarisController;
 use App\Http\Controllers\Api\DonasiController;
 use App\Http\Controllers\Api\TransaksiKeuanganController;
 use App\Http\Controllers\Api\KunjunganController;
+use App\Http\Controllers\Api\KategoriArtikelController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -45,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('transaksi-keuangan', App\Http\Controllers\Api\TransaksiKeuanganController::class);
     
     // Epic 3.1: Artikel & Galeri
+    Route::apiResource('kategori-artikel', KategoriArtikelController::class);
     Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class);
     Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['update']);
 

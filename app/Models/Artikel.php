@@ -15,7 +15,8 @@ class Artikel extends Model
         'judul',
         'slug',
         'konten',
-        'kategori',
+        'kategori_id',
+        'file_url',
         'thumbnail_url',
         'penulis_id'
     ];
@@ -23,5 +24,10 @@ class Artikel extends Model
     public function penulis()
     {
         return $this->belongsTo(User::class, 'penulis_id');
+    }
+
+    public function kategoriArtikel()
+    {
+        return $this->belongsTo(KategoriArtikel::class, 'kategori_id');
     }
 }
