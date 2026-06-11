@@ -30,4 +30,9 @@ class MutasiBarang extends Model
     {
         return $this->belongsTo(Inventaris::class);
     }
+
+    public function transaksiKeuangan()
+    {
+        return $this->belongsTo(TransaksiKeuangan::class);
+    }
 }

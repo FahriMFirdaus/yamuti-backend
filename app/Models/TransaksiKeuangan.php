@@ -25,4 +25,9 @@ class TransaksiKeuangan extends Model
     {
         return $this->belongsTo(Donasi::class);
     }
+
+    public function mutasiBarang()
+    {
+        return $this->hasMany(MutasiBarang::class);
+    }
 }
