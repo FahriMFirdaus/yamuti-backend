@@ -15,11 +15,9 @@ return new class extends Migration
             $table->text('konten');
             $table->string('kategori')->default('Berita');
             $table->string('thumbnail_url')->nullable();
-            $table->uuid('penulis_id');
+            $table->foreignId('penulis_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
-            
-            $table->foreign('penulis_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         Schema::create('galeris', function (Blueprint $table) {
@@ -27,11 +25,9 @@ return new class extends Migration
             $table->string('judul');
             $table->text('deskripsi')->nullable();
             $table->string('file_url');
-            $table->uuid('diunggah_oleh');
+            $table->foreignId('diunggah_oleh')->constrained('users')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
-            
-            $table->foreign('diunggah_oleh')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

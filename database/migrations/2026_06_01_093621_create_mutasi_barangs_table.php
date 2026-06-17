@@ -17,8 +17,8 @@ return new class extends Migration
             $table->date('tanggal_mutasi');
             
             $table->uuid('transaksi_keuangan_id')->nullable(); // Relasi ke trigger finansial
-            $table->uuid('created_by')->nullable();
-            $table->uuid('updated_by')->nullable();
+            $table->foreignId('created_by')->nullable();
+            $table->foreignId('updated_by')->nullable();
             
             $table->timestamps();
             $table->softDeletes();
