@@ -18,6 +18,7 @@ class DonasiRequest extends FormRequest
             'no_whatsapp' => ['nullable', 'string', 'max:20'],
             'gross_amount' => ['required', 'numeric', 'min:1000'],
             'payment_type' => ['nullable', 'string', 'max:100'],
+            'kampanye_id' => ['nullable', 'exists:kampanyes,id'],
         ];
     }
 }

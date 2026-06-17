@@ -71,6 +71,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class);
     Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['update']);
 
+    // Kampanye Crowdfunding (Protected endpoints for Admin)
+    Route::apiResource('kampanye', App\Http\Controllers\Api\KampanyeController::class)->except(['index', 'show']);
+
     // Broadcast
     Route::post('/broadcast/send', [BroadcastController::class, 'send']);
 
@@ -88,6 +91,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
     Route::patch('/kunjungan/{id}/status', [KunjunganController::class, 'updateStatus']);
 });
+
+// Endpoint publik untuk Kampanye
+Route::get('/kampanye', [\App\Http\Controllers\Api\KampanyeController::class, 'index']);
+Route::get('/kampanye/{id}', [\App\Http\Controllers\Api\KampanyeController::class, 'show']);
 
 // Endpoint publik untuk Donatur membuat donasi (di luar auth)
 Route::post('/donasi', [DonasiController::class, 'store'])->middleware('throttle:public-forms');
