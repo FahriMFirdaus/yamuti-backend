@@ -16,8 +16,8 @@ return new class extends Migration
             $table->boolean('kategori_bayi')->default(false);
             
             // Kolom audit trail
-            $table->uuid('created_by')->nullable();
-            $table->uuid('updated_by')->nullable();
+            $table->foreignId('created_by')->nullable();
+            $table->foreignId('updated_by')->nullable();
             
             $table->timestamps();
             $table->softDeletes();

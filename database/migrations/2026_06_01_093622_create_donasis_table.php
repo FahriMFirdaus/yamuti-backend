@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('donasis', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id')->nullable(); // Bisa null jika donatur adalah Guest
+            $table->foreignId('user_id')->nullable(); // Bisa null jika donatur adalah Guest
             $table->string('nama_donatur');
             $table->string('no_whatsapp')->nullable();
             $table->decimal('gross_amount', 15, 2);

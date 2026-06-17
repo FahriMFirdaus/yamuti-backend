@@ -27,7 +27,11 @@ Route::get('/setup-db', function (Request $request) {
     }
     
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        if ($request->query('fresh') === '1') {
+            \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        } else {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        }
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
         return "Database migration and seeding completed successfully!";
     } catch (\Exception $e) {

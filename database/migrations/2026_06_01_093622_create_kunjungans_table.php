@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('status', ['PENDING', 'APPROVED', 'REJECTED'])->default('PENDING');
             
             $table->uuid('branch_id')->nullable();
-            $table->uuid('approved_by')->nullable();
+            $table->foreignId('approved_by')->nullable();
             
             $table->timestamps();
             $table->softDeletes();
