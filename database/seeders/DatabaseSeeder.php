@@ -15,20 +15,20 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Inisialisasi Role Dasar
-        $ownerRole = Role::firstOrCreate(['name' => 'owner', 'guard_name' => 'web']);
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $donaturRole = Role::firstOrCreate(['name' => 'donatur', 'guard_name' => 'web']);
         $guestRole = Role::firstOrCreate(['name' => 'guest', 'guard_name' => 'web']);
 
-        // 2. Buat Akun Owner
-        $owner = User::firstOrCreate(
-            ['email' => 'owner@yamuti.org'],
+        // 2. Buat Akun Super Admin
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'superadmin@yamuti.org'],
             [
-                'name' => 'Owner System',
+                'name' => 'Super Administrator',
                 'password' => bcrypt('password'), // password default: password
             ]
         );
-        $owner->assignRole($ownerRole);
+        $superAdmin->assignRole($superAdminRole);
 
         // Buat Akun Admin
         $admin = User::firstOrCreate(
