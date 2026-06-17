@@ -40,10 +40,10 @@ class DonasiController extends Controller
         return $this->successResponse($data, 'Donasi berhasil dicatat', 201);
     }
 
-    public function markAsPaid($id): JsonResponse
+    public function verify($id): JsonResponse
     {
-        // Fitur simulasi atau webhook dari Payment Gateway
+        // Admin memverifikasi bukti donasi
         $data = $this->donasiService->updateStatus($id, 'PAID');
-        return $this->successResponse($data, 'Donasi berhasil dibayar dan dana telah dialokasikan (Split 10-90)');
+        return $this->successResponse($data, 'Donasi berhasil diverifikasi dan dana telah dialokasikan (Split 10-90)');
     }
 }

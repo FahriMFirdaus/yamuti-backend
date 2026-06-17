@@ -38,4 +38,24 @@ class TransaksiKeuanganController extends Controller
         $saldo = $this->transaksiService->getSaldo($jenisKas);
         return $this->successResponse(['jenis_kas' => $jenisKas, 'saldo' => $saldo], 'Saldo berhasil dihitung');
     }
+
+    public function laporan(Request $request): JsonResponse
+    {
+        $bulan = $request->query('bulan', date('m'));
+        $tahun = $request->query('tahun', date('Y'));
+        $jenis = $request->query('jenis'); // pemasukan/pengeluaran -> Debit/Kredit
+
+        $query = \App\Models\TransaksiKeuangan::whereYear('created_at', $tahun)
+                    ->whereMonth('created_at', $bulan);
+        
+        if ($jenis === 'pemasukan') {
+            $query->where('tipe_transaksi', 'Debit');
+        } elseif ($jenis === 'pengeluaran') {
+            $query->where('tipe_transaksi', 'Kredit');
+        }
+
+        $data = $query->latest()->get();
+
+        return $this->successResponse($data, 'Laporan keuangan berhasil diambil');
+    }
 }
