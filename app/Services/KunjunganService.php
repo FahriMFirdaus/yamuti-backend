@@ -32,8 +32,8 @@ class KunjunganService extends BaseService
             'approved_by' => $adminId,
         ]);
         
-        $pesan = "Halo {$kunjungan->nama_pengunjung}, permintaan kunjungan Anda pada {$kunjungan->slot_waktu} telah disetujui.";
-        SendWhatsAppMessage::dispatch($kunjungan->nomor_telepon, $pesan);
+        $pesan = "Halo {$kunjungan->nama_tamu}, permintaan kunjungan Anda pada {$kunjungan->slot_waktu} telah disetujui.";
+        SendWhatsAppMessage::dispatch($kunjungan->no_whatsapp, $pesan);
         
         return $kunjungan;
     }
@@ -46,8 +46,8 @@ class KunjunganService extends BaseService
             'approved_by' => $adminId,
         ]);
         
-        $pesan = "Mohon maaf {$kunjungan->nama_pengunjung}, permintaan kunjungan Anda pada {$kunjungan->slot_waktu} tidak dapat kami setujui saat ini.";
-        SendWhatsAppMessage::dispatch($kunjungan->nomor_telepon, $pesan);
+        $pesan = "Mohon maaf {$kunjungan->nama_tamu}, permintaan kunjungan Anda pada {$kunjungan->slot_waktu} tidak dapat kami setujui saat ini.";
+        SendWhatsAppMessage::dispatch($kunjungan->no_whatsapp, $pesan);
         
         return $kunjungan;
     }
