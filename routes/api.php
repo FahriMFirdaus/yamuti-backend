@@ -17,6 +17,10 @@ use App\Http\Controllers\Api\DashboardController;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:public-forms');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:public-forms');
+    // Dummy login route to catch unauthenticated API requests without Accept: application/json
+    Route::get('/login', function () {
+        return response()->json(['success' => false, 'message' => 'Unauthenticated or Token Invalid.'], 401);
+    })->name('login');
     // TODO: forgot-password and reset-password
 });
 
