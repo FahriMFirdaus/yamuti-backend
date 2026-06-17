@@ -10,9 +10,15 @@ use App\Http\Controllers\Api\DonasiController;
 use App\Http\Controllers\Api\TransaksiKeuanganController;
 use App\Http\Controllers\Api\KunjunganController;
 use App\Http\Controllers\Api\KategoriArtikelController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\BroadcastController;
+use App\Http\Controllers\Api\DashboardController;
 
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:public-forms');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:public-forms');
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:public-forms');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:public-forms');
+    // TODO: forgot-password and reset-password
+});
 
 Route::get('/setup-db', function (Request $request) {
     $token = env('SETUP_DB_TOKEN');
@@ -30,10 +36,11 @@ Route::get('/setup-db', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    
-    Route::get('/user', function (Request $request) {
-        return $request->user();
+    Route::prefix('auth')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/me', function (Request $request) {
+            return $request->user()->load('roles.permissions');
+        });
     });
 
     // Role & Permission Management
@@ -44,21 +51,33 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/roles/{id}', [RoleController::class, 'update']);
     Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
 
+    // Admin Management
+    Route::apiResource('admins', AdminController::class);
+
+    // Dashboard
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
+
     // Core Business Logic
     Route::apiResource('anak-asuh', AnakAsuhController::class);
     Route::apiResource('inventaris', InventarisController::class);
     Route::apiResource('mutasi-barang', App\Http\Controllers\Api\MutasiBarangController::class);
+    
+    // Keuangan & Laporan
     Route::apiResource('transaksi-keuangan', App\Http\Controllers\Api\TransaksiKeuanganController::class);
+    Route::get('/keuangan/laporan', [TransaksiKeuanganController::class, 'laporan']);
     
     // Epic 3.1: Artikel & Galeri
     Route::apiResource('kategori-artikel', KategoriArtikelController::class);
     Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class);
     Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['update']);
 
+    // Broadcast
+    Route::post('/broadcast/send', [BroadcastController::class, 'send']);
+
     // Donasi & Kas
     Route::get('/donasi', [DonasiController::class, 'index']);
     Route::get('/donasi/{id}', [DonasiController::class, 'show']);
-    Route::post('/donasi/{id}/mark-paid', [DonasiController::class, 'markAsPaid']);
+    Route::patch('/donasi/{id}/verify', [DonasiController::class, 'verify']);
     
     Route::get('/transaksi', [TransaksiKeuanganController::class, 'index']);
     Route::post('/transaksi', [TransaksiKeuanganController::class, 'store']);
@@ -67,8 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Kunjungan (Terlindungi)
     Route::get('/kunjungan', [KunjunganController::class, 'index']);
     Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
-    Route::post('/kunjungan/{id}/approve', [KunjunganController::class, 'approve']);
-    Route::post('/kunjungan/{id}/reject', [KunjunganController::class, 'reject']);
+    Route::patch('/kunjungan/{id}/status', [KunjunganController::class, 'updateStatus']);
 });
 
 // Endpoint publik untuk Donatur membuat donasi (di luar auth)

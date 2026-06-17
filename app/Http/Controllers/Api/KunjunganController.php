@@ -40,15 +40,24 @@ class KunjunganController extends Controller
         return $this->successResponse($data, 'Detail kunjungan berhasil diambil');
     }
 
-    public function approve(Request $request, $id): JsonResponse
+    public function updateStatus(Request $request, $id): JsonResponse
     {
-        $data = $this->kunjunganService->approveKunjungan($id, $request->user()->id);
-        return $this->successResponse($data, 'Kunjungan disetujui');
-    }
+        $status = strtoupper($request->input('status')); // APPROVED, REJECTED, COMPLETED
+        $adminId = $request->user()->id;
 
-    public function reject(Request $request, $id): JsonResponse
-    {
-        $data = $this->kunjunganService->rejectKunjungan($id, $request->user()->id);
-        return $this->successResponse($data, 'Kunjungan ditolak');
+        if ($status === 'APPROVED') {
+            $data = $this->kunjunganService->approveKunjungan($id, $adminId);
+            return $this->successResponse($data, 'Kunjungan disetujui');
+        } elseif ($status === 'REJECTED') {
+            $data = $this->kunjunganService->rejectKunjungan($id, $adminId);
+            return $this->successResponse($data, 'Kunjungan ditolak');
+        } else {
+            // Jika ada status COMPLETED dll, bisa diarahkan ke update standar
+            // Untuk sementara kita panggil fungsi approve/reject, atau update model langsung jika ada fungsi di service
+            // Untuk COMPLETED kita harus update manual jika belum ada di service:
+            $kunjungan = \App\Models\Kunjungan::findOrFail($id);
+            $kunjungan->update(['status' => $status]);
+            return $this->successResponse($kunjungan, "Kunjungan diperbarui menjadi $status");
+        }
     }
 }
