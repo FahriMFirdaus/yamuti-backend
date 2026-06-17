@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('artikels', function (Blueprint $table) {
             $table->uuid('kategori_id')->nullable()->after('id');
-            $table->string('slug')->unique()->after('judul');
             $table->foreign('kategori_id')->references('id')->on('kategori_artikels')->onDelete('set null');
         });
     }
@@ -25,7 +24,7 @@ return new class extends Migration
     {
         Schema::table('artikels', function (Blueprint $table) {
             $table->dropForeign(['kategori_id']);
-            $table->dropColumn(['kategori_id', 'slug']);
+            $table->dropColumn(['kategori_id']);
         });
     }
 };
