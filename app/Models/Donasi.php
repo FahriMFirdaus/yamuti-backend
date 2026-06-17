@@ -13,6 +13,7 @@ class Donasi extends Model
 
     protected $fillable = [
         'user_id',
+        'kampanye_id',
         'nama_donatur',
         'no_whatsapp',
         'gross_amount',
@@ -22,6 +23,11 @@ class Donasi extends Model
         'snap_token',
         'payment_url'
     ];
+
+    public function kampanye()
+    {
+        return $this->belongsTo(Kampanye::class);
+    }
 
     public function transaksiKeuangan()
     {

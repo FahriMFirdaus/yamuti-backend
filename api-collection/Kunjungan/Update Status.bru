@@ -1,0 +1,18 @@
+meta {
+  name: Update Status
+  type: http
+  seq: 3
+}
+patch {
+  url: {{base_url}}/api/kunjungan/REPLACE_ID/status
+  body: json
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:json {
+  {
+    "status": "APPROVED"
+  }
+}

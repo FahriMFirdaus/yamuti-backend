@@ -1,0 +1,13 @@
+meta {
+  name: Get Admins
+  type: http
+  seq: 1
+}
+get {
+  url: {{base_url}}/api/admins
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
