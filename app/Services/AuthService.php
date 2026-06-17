@@ -21,8 +21,10 @@ class AuthService extends BaseService
             'status_pegawai' => $data['status_pegawai'] ?? 'Aktif',
         ]);
 
-        // Catatan: Setelah role dibuat (lewat seeder), kita bisa otomatiskan:
-        // $user->assignRole('Donatur'); 
+        // Assign default role untuk user yang register secara publik
+        if (\Spatie\Permission\Models\Role::where('name', 'donatur')->exists()) {
+            $user->assignRole('donatur');
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
