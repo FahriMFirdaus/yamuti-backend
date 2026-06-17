@@ -51,7 +51,7 @@ class DonasiService extends BaseService
     public function updateStatus(string $id, string $status): Donasi
     {
         return DB::transaction(function () use ($id, $status) {
-            $donasi = Donasi::findOrFail($id);
+            $donasi = Donasi::lockForUpdate()->findOrFail($id);
             
             // Logika Otomatis: Jika status berubah jadi PAID untuk pertama kali, jalankan Split Rule
             if ($donasi->status !== 'PAID' && $status === 'PAID') {

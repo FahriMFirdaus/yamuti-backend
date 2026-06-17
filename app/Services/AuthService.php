@@ -14,6 +14,11 @@ class AuthService extends BaseService
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'nik' => $data['nik'] ?? null,
+            'no_hp' => $data['no_hp'] ?? null,
+            'skck' => $data['skck'] ?? null,
+            'alamat' => $data['alamat'] ?? null,
+            'status_pegawai' => $data['status_pegawai'] ?? 'Aktif',
         ]);
 
         // Catatan: Setelah role dibuat (lewat seeder), kita bisa otomatiskan:
