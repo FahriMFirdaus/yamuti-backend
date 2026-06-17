@@ -1,16 +1,16 @@
 meta {
-  name: Login Admin
+  name: Login
   type: http
   seq: 1
 }
 post {
-  url: {{base_url}}/api/login
+  url: {{base_url}}/api/auth/login
   body: json
   auth: none
 }
 body:json {
   {
-    "email": "admin@yamuti.org",
+    "email": "superadmin@yamuti.org",
     "password": "password"
   }
 }

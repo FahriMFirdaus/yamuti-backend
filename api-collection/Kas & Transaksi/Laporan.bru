@@ -1,0 +1,13 @@
+meta {
+  name: Laporan Keuangan
+  type: http
+  seq: 4
+}
+get {
+  url: {{base_url}}/api/keuangan/laporan?bulan=06&tahun=2026
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
