@@ -11,10 +11,15 @@ use App\Http\Controllers\Api\TransaksiKeuanganController;
 use App\Http\Controllers\Api\KunjunganController;
 use App\Http\Controllers\Api\KategoriArtikelController;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:public-forms');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:public-forms');
 
-Route::get('/setup-db', function () {
+Route::get('/setup-db', function (Request $request) {
+    $token = env('SETUP_DB_TOKEN');
+    if (!app()->environment('local') && (!$token || $request->query('token') !== $token)) {
+        abort(403, 'Unauthorized. Please configure SETUP_DB_TOKEN in Render env and pass it as ?token=... to run migrations.');
+    }
+    
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
@@ -67,9 +72,9 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Endpoint publik untuk Donatur membuat donasi (di luar auth)
-Route::post('/donasi', [DonasiController::class, 'store']);
+Route::post('/donasi', [DonasiController::class, 'store'])->middleware('throttle:public-forms');
 Route::post('/midtrans/webhook', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
 
 // Endpoint publik untuk pendaftaran tamu Kunjungan
-Route::post('/kunjungan', [KunjunganController::class, 'store']);
+Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
 

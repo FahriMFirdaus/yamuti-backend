@@ -13,15 +13,22 @@ class AnakAsuh extends Model
 
     protected $fillable = [
         'nama',
+        'no_kk',
+        'no_akte',
+        'tempat_lahir',
+        'jenis_kelamin',
         'tanggal_lahir',
         'status', 
         'kategori_bayi',
+        'tanggal_masuk',
+        'keterangan',
         'created_by',
         'updated_by'
     ];
 
     protected $casts = [
         'tanggal_lahir' => 'date',
+        'tanggal_masuk' => 'date',
         'kategori_bayi' => 'boolean',
     ];
 }
