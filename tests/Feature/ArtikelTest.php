@@ -24,7 +24,7 @@ class ArtikelTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
         
-        $kategori = KategoriArtikel::create(['nama' => 'Pendidikan', 'slug' => 'pendidikan']);
+        $kategori = KategoriArtikel::create(['nama_kategori' => 'Pendidikan', 'slug' => 'pendidikan']);
 
         $response = $this->actingAs($admin, 'sanctum')->postJson('/api/artikel', [
             'judul' => 'Artikel Baru',

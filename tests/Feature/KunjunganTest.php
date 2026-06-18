@@ -26,7 +26,7 @@ class KunjunganTest extends TestCase
             'no_whatsapp' => '081222333444',
             'tanggal_rencana' => '2026-10-10',
             'maksud' => 'Donasi dan silaturahmi',
-            'jumlah_pengunjung' => 5, 'slot_waktu' => 'Pagi'
+            'jumlah_pengunjung' => 5, 'slot_waktu' => now()->addDays(2)->toDateTimeString()
         ]);
 
         $response->assertStatus(201);

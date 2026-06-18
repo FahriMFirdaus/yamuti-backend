@@ -43,7 +43,7 @@ class InventarisTest extends TestCase
         $response = $this->actingAs($admin, 'sanctum')->postJson("/api/inventaris/{$inventaris->id}/mutasi", [
             'tipe' => 'masuk',
             'jumlah' => 5,
-            'keterangan' => 'Tambahan laptop'
+            'keterangan' => 'Tambahan laptop', 'tanggal_mutasi' => now()->toDateString()
         ]);
 
         $response->assertStatus(201);

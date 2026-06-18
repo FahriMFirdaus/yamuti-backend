@@ -24,10 +24,10 @@ class KategoriArtikelTest extends TestCase
         $admin->assignRole('admin');
 
         $response = $this->actingAs($admin, 'sanctum')->postJson('/api/kategori-artikel', [
-            'nama' => 'Pendidikan'
+            'nama_kategori' => 'Pendidikan'
         ]);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('kategori_artikels', ['nama' => 'Pendidikan']);
+        $this->assertDatabaseHas('kategori_artikels', ['nama_kategori' => 'Pendidikan']);
     }
 }
