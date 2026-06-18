@@ -3,19 +3,22 @@ meta {
   type: http
   seq: 2
 }
+
 post {
-  url: {{base_url}}/api/inventaris/1/mutasi
+  url: {{base_url}}/api/inventaris/019ed843-86c8-7043-9fb9-9a86551396de/mutasi
   body: json
   auth: bearer
 }
+
 auth:bearer {
   token: {{token}}
 }
+
 body:json {
   {
     "tipe": "masuk",
     "jumlah": 5,
     "tanggal_mutasi": "2026-06-01",
-    "keterangan": "Sumbangan kasur tambahan"
+    "keterangan": "Sumbangan laptop tambahan"
   }
 }

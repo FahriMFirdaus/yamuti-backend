@@ -23,10 +23,15 @@ class TransaksiKeuanganService extends BaseService
         return TransaksiKeuangan::create($data);
     }
     
-    public function getSaldo(string $jenisKas = 'Cabang'): float
+    public function getSaldo(?string $jenisKas = null): float
     {
-        $debit = TransaksiKeuangan::where('jenis_kas', $jenisKas)->where('tipe_transaksi', 'Debit')->sum('nominal');
-        $kredit = TransaksiKeuangan::where('jenis_kas', $jenisKas)->where('tipe_transaksi', 'Kredit')->sum('nominal');
+        $query = TransaksiKeuangan::query();
+        if ($jenisKas) {
+            $query->where('jenis_kas', $jenisKas);
+        }
+        
+        $debit = (clone $query)->where('tipe_transaksi', 'Debit')->sum('nominal');
+        $kredit = (clone $query)->where('tipe_transaksi', 'Kredit')->sum('nominal');
         return $debit - $kredit;
     }
 }

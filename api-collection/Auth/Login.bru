@@ -3,17 +3,20 @@ meta {
   type: http
   seq: 1
 }
+
 post {
   url: {{base_url}}/api/auth/login
   body: json
   auth: none
 }
+
 body:json {
   {
     "email": "superadmin@yamuti.org",
     "password": "password"
   }
 }
+
 script:post-response {
   if(res.status === 200) {
     bru.setEnvVar("token", res.body.data.token);

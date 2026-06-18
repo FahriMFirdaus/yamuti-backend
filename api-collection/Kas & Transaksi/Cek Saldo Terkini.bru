@@ -1,10 +1,10 @@
 meta {
-  name: Cek Saldo Cabang
+  name: Cek Saldo Terkini
   type: http
   seq: 1
 }
 get {
-  url: {{base_url}}/api/kas/saldo?jenis_kas=Cabang
+  url: {{base_url}}/api/kas/saldo
   body: none
   auth: bearer
 }

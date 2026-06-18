@@ -34,9 +34,9 @@ class TransaksiKeuanganController extends Controller
 
     public function saldo(Request $request): JsonResponse
     {
-        $jenisKas = $request->query('jenis_kas', 'Cabang');
+        $jenisKas = $request->query('jenis_kas');
         $saldo = $this->transaksiService->getSaldo($jenisKas);
-        return $this->successResponse(['jenis_kas' => $jenisKas, 'saldo' => $saldo], 'Saldo berhasil dihitung');
+        return $this->successResponse(['jenis_kas' => $jenisKas ?? 'Semua', 'saldo' => $saldo], 'Saldo berhasil dihitung');
     }
 
     public function laporan(Request $request): JsonResponse
