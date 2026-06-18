@@ -14,7 +14,7 @@ class AdminsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::firstOrCreate(['name' => 'owner', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'owner']);
     }
 
     public function test_owner_can_create_admin()

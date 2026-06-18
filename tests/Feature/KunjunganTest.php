@@ -15,7 +15,7 @@ class KunjunganTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'admin']);
     }
 
     public function test_public_can_create_kunjungan()
@@ -25,8 +25,8 @@ class KunjunganTest extends TestCase
             'instansi' => 'PT Makmur',
             'no_whatsapp' => '081222333444',
             'tanggal_rencana' => '2026-10-10',
-            'tujuan' => 'Donasi dan silaturahmi',
-            'jumlah_peserta' => 5
+            'maksud' => 'Donasi dan silaturahmi',
+            'jumlah_pengunjung' => 5, 'slot_waktu' => 'Pagi'
         ]);
 
         $response->assertStatus(201);

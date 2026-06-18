@@ -16,7 +16,7 @@ class GaleriTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'admin']);
     }
 
     public function test_admin_can_upload_galeri()
