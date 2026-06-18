@@ -1,0 +1,18 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+post {
+  url: {{base_url}}/api/galeri
+  body: multipartForm
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:multipart-form {
+  judul: Dokumentasi Kegiatan
+  deskripsi: Foto kegiatan belajar mengajar
+  // file: (pilih file di UI)
+}

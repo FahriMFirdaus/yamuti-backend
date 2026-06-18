@@ -1,13 +1,14 @@
 meta {
-  name: Get All
+  name: Update
   type: http
-  seq: 1
+  seq: 4
 }
-get {
-  url: {{base_url}}/api/anak-asuh
+put {
+  url: {{base_url}}/api/artikel/REPLACE_ID
   body: none
   auth: bearer
 }
 auth:bearer {
   token: {{token}}
 }
+

@@ -1,0 +1,18 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+put {
+  url: {{base_url}}/api/kampanye/REPLACE_ID
+  body: json
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:json {
+  {
+    "judul": "Kampanye Update"
+  }
+}

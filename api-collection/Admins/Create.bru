@@ -1,0 +1,21 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+post {
+  url: {{base_url}}/api/admins
+  body: json
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:json {
+  {
+    "name": "New Admin",
+    "email": "newadmin@yamuti.org",
+    "password": "password",
+    "role": "admin"
+  }
+}

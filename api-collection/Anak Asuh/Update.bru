@@ -1,0 +1,18 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+put {
+  url: {{base_url}}/api/anak-asuh/REPLACE_ID
+  body: json
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:json {
+  {
+    "nama_lengkap": "Anak Asuh 1 Update"
+  }
+}

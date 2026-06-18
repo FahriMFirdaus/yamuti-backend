@@ -1,0 +1,18 @@
+meta {
+  name: Update
+  type: http
+  seq: 5
+}
+put {
+  url: {{base_url}}/api/inventaris/REPLACE_ID
+  body: json
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:json {
+  {
+    "nama_barang": "Laptop Update"
+  }
+}
