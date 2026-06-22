@@ -1,0 +1,13 @@
+meta {
+  name: Riwayat Kunjungan Saya
+  type: http
+  seq: 5
+}
+get {
+  url: {{base_url}}/api/user/riwayat-kunjungan
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

@@ -1,0 +1,13 @@
+meta {
+  name: Riwayat Donasi Saya
+  type: http
+  seq: 4
+}
+get {
+  url: {{base_url}}/api/user/riwayat-donasi
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
