@@ -100,6 +100,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/donasi/{id}', [DonasiController::class, 'show']);
         Route::patch('/donasi/{id}/verify', [DonasiController::class, 'verify']);
         
+        // Data Donatur (CRM)
+        Route::get('/donatur', [\App\Http\Controllers\Api\DonaturController::class, 'index']);
+        Route::get('/donatur/{id}', [\App\Http\Controllers\Api\DonaturController::class, 'show']);
+        
         Route::get('/transaksi', [TransaksiKeuanganController::class, 'index']);
         Route::post('/transaksi', [TransaksiKeuanganController::class, 'store']);
         Route::get('/kas/saldo', [TransaksiKeuanganController::class, 'saldo']);
