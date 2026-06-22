@@ -46,4 +46,11 @@ class DonasiController extends Controller
         $data = $this->donasiService->updateStatus($id, 'PAID');
         return $this->successResponse($data, 'Donasi berhasil diverifikasi dan dana telah dialokasikan (Split 10-90)');
     }
+
+    public function riwayat(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $data = \App\Models\Donasi::where('user_id', $userId)->with('kampanye:id,judul,slug')->latest()->paginate(15);
+        return $this->successResponse($data, 'Riwayat donasi berhasil diambil');
+    }
 }

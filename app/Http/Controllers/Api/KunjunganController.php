@@ -60,4 +60,14 @@ class KunjunganController extends Controller
             return $this->successResponse($kunjungan, "Kunjungan diperbarui menjadi $status");
         }
     }
+
+    public function riwayat(Request $request): JsonResponse
+    {
+        $noHp = $request->user()->no_hp;
+        if (!$noHp) {
+            return $this->successResponse([], 'Nomor telepon (no_hp) pada profil Anda belum diisi, riwayat kunjungan tidak dapat dilacak.', 200);
+        }
+        $data = \App\Models\Kunjungan::where('no_whatsapp', $noHp)->latest()->paginate(15);
+        return $this->successResponse($data, 'Riwayat kunjungan berhasil diambil');
+    }
 }

@@ -84,10 +84,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('transaksi-keuangan', App\Http\Controllers\Api\TransaksiKeuanganController::class);
         Route::get('/keuangan/laporan', [TransaksiKeuanganController::class, 'laporan']);
         
-        // Epic 3.1: Artikel & Galeri
-        Route::apiResource('kategori-artikel', KategoriArtikelController::class);
-        Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class);
-        Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['update']);
+        // Epic 3.1: Artikel & Galeri (Hanya Hak Tulis/Ubah untuk Admin)
+        Route::apiResource('kategori-artikel', KategoriArtikelController::class)->except(['index', 'show']);
+        Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class)->except(['index', 'show']);
+        Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['index', 'show', 'update']);
 
         // Kampanye Crowdfunding (Protected endpoints for Admin)
         Route::apiResource('kampanye', App\Http\Controllers\Api\KampanyeController::class)->except(['index', 'show']);
@@ -119,6 +119,19 @@ Route::get('/kampanye/{id}', [\App\Http\Controllers\Api\KampanyeController::clas
 Route::post('/donasi', [DonasiController::class, 'store'])->middleware('throttle:public-forms');
 Route::post('/midtrans/webhook', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
 
+// Endpoint publik untuk Artikel & Galeri (Transparansi)
+Route::get('/artikel', [\App\Http\Controllers\Api\ArtikelController::class, 'index']);
+Route::get('/artikel/{id}', [\App\Http\Controllers\Api\ArtikelController::class, 'show']);
+Route::get('/kategori-artikel', [\App\Http\Controllers\Api\KategoriArtikelController::class, 'index']);
+Route::get('/kategori-artikel/{id}', [\App\Http\Controllers\Api\KategoriArtikelController::class, 'show']);
+Route::get('/galeri', [\App\Http\Controllers\Api\GaleriController::class, 'index']);
+Route::get('/galeri/{id}', [\App\Http\Controllers\Api\GaleriController::class, 'show']);
+
 // Endpoint publik untuk pendaftaran tamu Kunjungan
 Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
 
+// Rute Riwayat Profil (Bisa diakses oleh Donatur / User biasa yang sedang login)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user/riwayat-donasi', [DonasiController::class, 'riwayat']);
+    Route::get('/user/riwayat-kunjungan', [KunjunganController::class, 'riwayat']);
+});
