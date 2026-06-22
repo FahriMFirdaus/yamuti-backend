@@ -51,54 +51,64 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    // Role & Permission Management
-    Route::get('/permissions', [RoleController::class, 'permissions']);
-    Route::get('/roles', [RoleController::class, 'index']);
-    Route::post('/roles', [RoleController::class, 'store']);
-    Route::get('/roles/{id}', [RoleController::class, 'show']);
-    Route::put('/roles/{id}', [RoleController::class, 'update']);
-    Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+    // ==========================================
+    // AREA SUPER ADMIN (Manajemen Akses & Staf)
+    // ==========================================
+    Route::middleware('role:super_admin')->group(function () {
+        // Role & Permission Management
+        Route::get('/permissions', [RoleController::class, 'permissions']);
+        Route::get('/roles', [RoleController::class, 'index']);
+        Route::post('/roles', [RoleController::class, 'store']);
+        Route::get('/roles/{id}', [RoleController::class, 'show']);
+        Route::put('/roles/{id}', [RoleController::class, 'update']);
+        Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
 
-    // Admin Management
-    Route::apiResource('admins', AdminController::class);
+        // Admin Management
+        Route::apiResource('admins', AdminController::class);
+    });
 
-    // Dashboard
-    Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
+    // ==========================================
+    // AREA OPERASIONAL (Admin & Super Admin)
+    // ==========================================
+    Route::middleware('role:super_admin|admin')->group(function () {
+        // Dashboard
+        Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
 
-    // Core Business Logic
-    Route::apiResource('anak-asuh', AnakAsuhController::class);
-    Route::apiResource('inventaris', InventarisController::class);
-    Route::get('/inventaris/{inventarisId}/mutasi', [App\Http\Controllers\Api\MutasiBarangController::class, 'index']);
-    Route::post('/inventaris/{inventarisId}/mutasi', [App\Http\Controllers\Api\MutasiBarangController::class, 'store']);
-    
-    // Keuangan & Laporan
-    Route::apiResource('transaksi-keuangan', App\Http\Controllers\Api\TransaksiKeuanganController::class);
-    Route::get('/keuangan/laporan', [TransaksiKeuanganController::class, 'laporan']);
-    
-    // Epic 3.1: Artikel & Galeri
-    Route::apiResource('kategori-artikel', KategoriArtikelController::class);
-    Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class);
-    Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['update']);
+        // Core Business Logic
+        Route::apiResource('anak-asuh', AnakAsuhController::class);
+        Route::apiResource('inventaris', InventarisController::class);
+        Route::get('/inventaris/{inventarisId}/mutasi', [App\Http\Controllers\Api\MutasiBarangController::class, 'index']);
+        Route::post('/inventaris/{inventarisId}/mutasi', [App\Http\Controllers\Api\MutasiBarangController::class, 'store']);
+        
+        // Keuangan & Laporan
+        Route::apiResource('transaksi-keuangan', App\Http\Controllers\Api\TransaksiKeuanganController::class);
+        Route::get('/keuangan/laporan', [TransaksiKeuanganController::class, 'laporan']);
+        
+        // Epic 3.1: Artikel & Galeri
+        Route::apiResource('kategori-artikel', KategoriArtikelController::class);
+        Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class);
+        Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['update']);
 
-    // Kampanye Crowdfunding (Protected endpoints for Admin)
-    Route::apiResource('kampanye', App\Http\Controllers\Api\KampanyeController::class)->except(['index', 'show']);
+        // Kampanye Crowdfunding (Protected endpoints for Admin)
+        Route::apiResource('kampanye', App\Http\Controllers\Api\KampanyeController::class)->except(['index', 'show']);
 
-    // Broadcast
-    Route::post('/broadcast/send', [BroadcastController::class, 'send']);
+        // Broadcast
+        Route::post('/broadcast/send', [BroadcastController::class, 'send']);
 
-    // Donasi & Kas
-    Route::get('/donasi', [DonasiController::class, 'index']);
-    Route::get('/donasi/{id}', [DonasiController::class, 'show']);
-    Route::patch('/donasi/{id}/verify', [DonasiController::class, 'verify']);
-    
-    Route::get('/transaksi', [TransaksiKeuanganController::class, 'index']);
-    Route::post('/transaksi', [TransaksiKeuanganController::class, 'store']);
-    Route::get('/kas/saldo', [TransaksiKeuanganController::class, 'saldo']);
-    
-    // Kunjungan (Terlindungi)
-    Route::get('/kunjungan', [KunjunganController::class, 'index']);
-    Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
-    Route::patch('/kunjungan/{id}/status', [KunjunganController::class, 'updateStatus']);
+        // Donasi & Kas
+        Route::get('/donasi', [DonasiController::class, 'index']);
+        Route::get('/donasi/{id}', [DonasiController::class, 'show']);
+        Route::patch('/donasi/{id}/verify', [DonasiController::class, 'verify']);
+        
+        Route::get('/transaksi', [TransaksiKeuanganController::class, 'index']);
+        Route::post('/transaksi', [TransaksiKeuanganController::class, 'store']);
+        Route::get('/kas/saldo', [TransaksiKeuanganController::class, 'saldo']);
+        
+        // Kunjungan (Terlindungi)
+        Route::get('/kunjungan', [KunjunganController::class, 'index']);
+        Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
+        Route::patch('/kunjungan/{id}/status', [KunjunganController::class, 'updateStatus']);
+    });
 });
 
 // Endpoint publik untuk Kampanye
