@@ -29,11 +29,9 @@ class User extends Authenticatable
     /**
      * Mendapatkan role pertama yang dimiliki oleh User.
      */
-    protected function role(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function getRoleAttribute()
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn () => $this->roles->first()->name ?? null,
-        );
+        return $this->roles->first()->name ?? null;
     }
 
     /**
