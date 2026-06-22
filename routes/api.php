@@ -130,8 +130,17 @@ Route::get('/galeri/{id}', [\App\Http\Controllers\Api\GaleriController::class, '
 // Endpoint publik untuk pendaftaran tamu Kunjungan
 Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
 
-// Rute Riwayat Profil (Bisa diakses oleh Donatur / User biasa yang sedang login)
+// Endpoint publik untuk mengirim pesan (Kontak)
+Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])->middleware('throttle:public-forms');
+
+// Rute Profil & Riwayat (Bisa diakses oleh semua User yang sedang login)
 Route::middleware('auth:sanctum')->group(function () {
+    // Profil Mandiri
+    Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show']);
+    Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+    Route::put('/profile/password', [\App\Http\Controllers\Api\ProfileController::class, 'updatePassword']);
+
+    // Riwayat
     Route::get('/user/riwayat-donasi', [DonasiController::class, 'riwayat']);
     Route::get('/user/riwayat-kunjungan', [KunjunganController::class, 'riwayat']);
 });

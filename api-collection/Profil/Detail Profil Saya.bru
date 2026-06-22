@@ -1,0 +1,13 @@
+meta {
+  name: Detail Profil Saya
+  type: http
+  seq: 1
+}
+get {
+  url: {{base_url}}/api/profile
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

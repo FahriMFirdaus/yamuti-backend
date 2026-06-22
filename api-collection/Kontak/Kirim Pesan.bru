@@ -1,0 +1,18 @@
+meta {
+  name: Kirim Pesan
+  type: http
+  seq: 1
+}
+post {
+  url: {{base_url}}/api/contact
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "name": "Budi Santoso",
+    "email": "budi@example.com",
+    "subject": "Pertanyaan Donasi",
+    "message": "Halo, saya ingin bertanya mengenai metode donasi."
+  }
+}
