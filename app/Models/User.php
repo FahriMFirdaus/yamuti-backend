@@ -20,6 +20,23 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
     /**
+     * Atribut tambahan yang akan otomatis dimuat ke dalam respon JSON.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['role'];
+
+    /**
+     * Mendapatkan role pertama yang dimiliki oleh User.
+     */
+    protected function role(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn () => $this->roles->first()->name ?? null,
+        );
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

@@ -1,0 +1,13 @@
+meta {
+  name: Get All
+  type: http
+  seq: 3
+}
+get {
+  url: {{base_url}}/api/kunjungan
+  body: none
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
