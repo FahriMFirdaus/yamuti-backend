@@ -29,6 +29,16 @@ class AnakAsuh extends Model
     protected $casts = [
         'tanggal_lahir' => 'date',
         'tanggal_masuk' => 'date',
-        'kategori_bayi' => 'boolean',
     ];
+
+    /**
+     * Memaksa konversi boolean menjadi string 'true' / 'false' untuk kompatibilitas PostgreSQL
+     */
+    protected function kategoriBayi(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn ($value) => (bool) $value,
+            set: fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
+        );
+    }
 }
