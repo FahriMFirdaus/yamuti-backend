@@ -13,8 +13,10 @@ class AnakAsuhRequest extends FormRequest
 
     public function rules(): array
     {
+        $isUpdate = $this->isMethod('put') || $this->isMethod('patch');
+
         return [
-            'nama' => ['required', 'string', 'max:255'],
+            'nama' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:255'],
             'nik' => [
                 'nullable',
                 'string',
@@ -25,9 +27,9 @@ class AnakAsuhRequest extends FormRequest
             'no_akte' => ['nullable', 'string', 'max:255'],
             'tempat_lahir' => ['nullable', 'string', 'max:255'],
             'jenis_kelamin' => ['nullable', 'string', 'in:Laki-laki,Perempuan'],
-            'tanggal_lahir' => ['required', 'date', 'before_or_equal:today'],
-            'status' => ['required', 'string', 'in:Aktif,Alumni'],
-            'kategori_bayi' => ['required', 'boolean'],
+            'tanggal_lahir' => [$isUpdate ? 'sometimes' : 'required', 'date', 'before_or_equal:today'],
+            'status' => [$isUpdate ? 'sometimes' : 'required', 'string', 'in:Aktif,Alumni'],
+            'kategori_bayi' => [$isUpdate ? 'sometimes' : 'required', 'boolean'],
             'tanggal_masuk' => ['nullable', 'date', 'before_or_equal:today'],
             'keterangan' => ['nullable', 'string'],
         ];
