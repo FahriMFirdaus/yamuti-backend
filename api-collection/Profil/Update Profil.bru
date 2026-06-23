@@ -3,17 +3,16 @@ meta {
   type: http
   seq: 2
 }
-put {
+post {
   url: {{base_url}}/api/profile
-  body: json
+  body: multipartForm
   auth: bearer
 }
 auth:bearer {
   token: {{token}}
 }
-body:json {
-  {
-    "name": "My Name Updated",
-    "no_whatsapp": "081234567890"
-  }
+body:multipart-form {
+  _method: PUT
+  name: My Name Updated
+  no_whatsapp: 081234567890
 }

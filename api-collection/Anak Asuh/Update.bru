@@ -3,17 +3,16 @@ meta {
   type: http
   seq: 4
 }
-put {
+post {
   url: {{base_url}}/api/anak-asuh/{{anak_asuh_id}}
-  body: json
+  body: multipartForm
   auth: bearer
 }
 auth:bearer {
   token: {{token}}
 }
-body:json {
-  {
-    "nama": "Ahmad (Update)",
-    "status": "Aktif"
-  }
+body:multipart-form {
+  _method: PUT
+  nama: Ahmad (Update)
+  status: Aktif
 }

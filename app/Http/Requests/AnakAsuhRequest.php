@@ -32,6 +32,7 @@ class AnakAsuhRequest extends FormRequest
             'kategori_bayi' => [$isUpdate ? 'sometimes' : 'required', 'boolean'],
             'tanggal_masuk' => ['nullable', 'date', 'before_or_equal:today'],
             'keterangan' => ['nullable', 'string'],
+            'foto_identitas' => ['nullable', 'image', 'max:5120'],
         ];
     }
 }

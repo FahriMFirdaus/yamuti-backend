@@ -10,6 +10,12 @@ class AuthService extends BaseService
 {
     public function register(array $data): array
     {
+        $fotoUrl = null;
+        if (isset($data['foto_identitas'])) {
+            $path = $data['foto_identitas']->store('identitas/users', 's3');
+            $fotoUrl = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+        }
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -19,6 +25,7 @@ class AuthService extends BaseService
             'skck' => $data['skck'] ?? null,
             'alamat' => $data['alamat'] ?? null,
             'status_pegawai' => $data['status_pegawai'] ?? 'Aktif',
+            'foto_identitas' => $fotoUrl,
         ]);
 
         // Assign default role untuk user yang register secara publik

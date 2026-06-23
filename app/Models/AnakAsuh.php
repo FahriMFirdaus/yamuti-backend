@@ -16,6 +16,7 @@ class AnakAsuh extends Model
         'nik',
         'no_kk',
         'no_akte',
+        'foto_identitas',
         'tempat_lahir',
         'jenis_kelamin',
         'tanggal_lahir',

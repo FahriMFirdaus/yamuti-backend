@@ -5,26 +5,24 @@ meta {
 }
 post {
   url: {{base_url}}/api/anak-asuh
-  body: json
+  body: multipartForm
   auth: bearer
 }
 auth:bearer {
   token: {{token}}
 }
-body:json {
-  {
-    "nama": "Ahmad",
-    "tanggal_lahir": "2015-05-15",
-    "status": "Aktif",
-    "kategori_bayi": false,
-    "jenis_kelamin": "Laki-laki",
-    "nik": "3201021505150001",
-    "no_kk": "3201020000000000",
-    "no_akte": "12345/AK/2015",
-    "tempat_lahir": "Bandung",
-    "tanggal_masuk": "2020-01-10",
-    "keterangan": "Masuk diantar yayasan"
-  }
+body:multipart-form {
+  nama: Ahmad
+  tanggal_lahir: 2015-05-15
+  status: Aktif
+  kategori_bayi: 0
+  jenis_kelamin: Laki-laki
+  nik: 3201021505150001
+  no_kk: 3201020000000000
+  no_akte: 12345/AK/2015
+  tempat_lahir: Bandung
+  tanggal_masuk: 2020-01-10
+  keterangan: Masuk diantar yayasan
 }
 
 script:post-response {

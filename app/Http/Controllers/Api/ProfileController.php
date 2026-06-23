@@ -24,7 +24,13 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'no_hp' => 'sometimes|string|max:20',
+            'foto_identitas' => 'nullable|image|max:5120'
         ]);
+
+        if ($request->hasFile('foto_identitas')) {
+            $path = $request->file('foto_identitas')->store('identitas/users', 's3');
+            $validated['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+        }
 
         $user->update($validated);
 

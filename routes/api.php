@@ -134,9 +134,6 @@ Route::get('/galeri/{id}', [\App\Http\Controllers\Api\GaleriController::class, '
 // Endpoint publik untuk pendaftaran tamu Kunjungan
 Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
 
-// Endpoint publik untuk mengirim pesan (Kontak)
-Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])->middleware('throttle:public-forms');
-
 // Rute Profil & Riwayat (Bisa diakses oleh semua User yang sedang login)
 Route::middleware('auth:sanctum')->group(function () {
     // Profil Mandiri

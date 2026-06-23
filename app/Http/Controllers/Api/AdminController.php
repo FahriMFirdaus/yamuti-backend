@@ -32,10 +32,17 @@ class AdminController extends Controller
             'skck' => 'nullable|string|max:255',
             'alamat' => 'nullable|string',
             'status_pegawai' => 'nullable|string|max:50',
-            'role' => 'required|string|exists:roles,name'
+            'role' => 'required|string|exists:roles,name',
+            'foto_identitas' => 'nullable|image|max:5120'
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+        
+        if ($request->hasFile('foto_identitas')) {
+            $path = $request->file('foto_identitas')->store('identitas/users', 's3');
+            $validated['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+        }
+
         $admin = User::create($validated);
         $admin->assignRole($request->role);
 
@@ -67,11 +74,17 @@ class AdminController extends Controller
             'skck' => 'nullable|string|max:255',
             'alamat' => 'nullable|string',
             'status_pegawai' => 'nullable|string|max:50',
-            'role' => 'sometimes|string|exists:roles,name'
+            'role' => 'sometimes|string|exists:roles,name',
+            'foto_identitas' => 'nullable|image|max:5120'
         ]);
 
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
+        }
+
+        if ($request->hasFile('foto_identitas')) {
+            $path = $request->file('foto_identitas')->store('identitas/users', 's3');
+            $validated['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
         }
 
         $admin->update($validated);

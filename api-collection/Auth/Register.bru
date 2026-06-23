@@ -5,17 +5,15 @@ meta {
 }
 post {
   url: {{base_url}}/api/auth/register
-  body: json
+  body: multipartForm
   auth: none
 }
-body:json {
-  {
-    "name": "Donatur Baik",
-    "email": "donatur@example.com",
-    "password": "password",
-    "password_confirmation": "password",
-    "no_whatsapp": "08123456789"
-  }
+body:multipart-form {
+  name: Donatur Baik
+  email: donatur@example.com
+  password: password
+  password_confirmation: password
+  no_whatsapp: 08123456789
 }
 
 script:post-response {

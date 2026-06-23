@@ -5,22 +5,20 @@ meta {
 }
 post {
   url: {{base_url}}/api/admins
-  body: json
+  body: multipartForm
   auth: bearer
 }
 auth:bearer {
   token: {{token}}
 }
-body:json {
-  {
-    "name": "New Admin",
-    "email": "admin2@yamuti.org",
-    "password": "password",
-    "role": "admin",
-    "nik": "3201020000000000",
-    "no_hp": "081234567890",
-    "status_pegawai": "Aktif"
-  }
+body:multipart-form {
+  name: New Admin
+  email: admin2@yamuti.org
+  password: password
+  role: admin
+  nik: 3201020000000000
+  no_hp: 081234567890
+  status_pegawai: Aktif
 }
 
 script:post-response {

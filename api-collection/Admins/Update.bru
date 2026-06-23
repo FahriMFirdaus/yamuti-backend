@@ -3,17 +3,16 @@ meta {
   type: http
   seq: 4
 }
-put {
+post {
   url: {{base_url}}/api/admins/{{admin_id}}
-  body: json
+  body: multipartForm
   auth: bearer
 }
-body:json {
-  {
-    "name": "Admin Update",
-    "status_pegawai": "Aktif",
-    "no_hp": "081234567890"
-  }
+body:multipart-form {
+  _method: PUT
+  name: Admin Update
+  status_pegawai: Aktif
+  no_hp: 081234567890
 }
 
 auth:bearer {

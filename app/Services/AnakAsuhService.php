@@ -20,6 +20,12 @@ class AnakAsuhService extends BaseService
     public function createAnakAsuh(array $data, string $userId): AnakAsuh
     {
         $data['created_by'] = $userId;
+        
+        if (isset($data['foto_identitas'])) {
+            $path = $data['foto_identitas']->store('identitas/anak_asuh', 's3');
+            $data['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+        }
+
         return AnakAsuh::create($data);
     }
 
@@ -27,6 +33,12 @@ class AnakAsuhService extends BaseService
     {
         $anak = AnakAsuh::findOrFail($id);
         $data['updated_by'] = $userId;
+
+        if (isset($data['foto_identitas'])) {
+            $path = $data['foto_identitas']->store('identitas/anak_asuh', 's3');
+            $data['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+        }
+
         $anak->update($data);
         return $anak;
     }

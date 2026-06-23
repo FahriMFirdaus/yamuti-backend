@@ -23,6 +23,7 @@ class RegisterRequest extends FormRequest
             'skck' => ['nullable', 'string', 'max:255'],
             'alamat' => ['nullable', 'string'],
             'status_pegawai' => ['nullable', 'string', 'in:Aktif,Nonaktif'],
+            'foto_identitas' => ['nullable', 'image', 'max:5120'],
         ];
     }
 }
