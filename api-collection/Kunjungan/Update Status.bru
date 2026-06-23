@@ -3,16 +3,24 @@ meta {
   type: http
   seq: 3
 }
+
 patch {
   url: {{base_url}}/api/kunjungan/{{kunjungan_id}}/status
   body: json
   auth: bearer
 }
+
 auth:bearer {
   token: {{token}}
 }
+
 body:json {
   {
-    "status": "APPROVED"
+    "status": "DITERIMA",
+    "catatan_admin": "Ditunggu kedatangannya jam 10 pagi"
   }
+}
+
+vars:pre-request {
+  kunjungan_id: 019ef3eb-d2af-708a-b3ed-0f040d558cbe
 }

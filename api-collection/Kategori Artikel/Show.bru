@@ -3,8 +3,13 @@ meta {
   type: http
   seq: 2
 }
+
 get {
   url: {{base_url}}/api/kategori-artikel/{{kategori_artikel_id}}
   body: none
   auth: none
+}
+
+vars:pre-request {
+  kategori_artikel_id: 019ef3bd-7055-731d-9053-883682b4b5a0
 }

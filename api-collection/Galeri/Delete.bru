@@ -3,11 +3,17 @@ meta {
   type: http
   seq: 5
 }
+
 delete {
   url: {{base_url}}/api/galeri/{{galeri_id}}
   body: none
   auth: bearer
 }
+
 auth:bearer {
   token: {{token}}
+}
+
+vars:pre-request {
+  galeri_id: 019ef460-112d-7139-a1e3-75bcdc3b6e6a
 }

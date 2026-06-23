@@ -5,9 +5,17 @@ meta {
 }
 put {
   url: {{base_url}}/api/admins/{{admin_id}}
-  body: none
+  body: json
   auth: bearer
 }
+body:json {
+  {
+    "name": "Admin Update",
+    "status_pegawai": "Aktif",
+    "no_hp": "081234567890"
+  }
+}
+
 auth:bearer {
   token: {{token}}
 }

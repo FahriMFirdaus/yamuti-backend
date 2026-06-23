@@ -5,9 +5,17 @@ meta {
 }
 put {
   url: {{base_url}}/api/artikel/{{artikel_id}}
-  body: none
+  body: json
   auth: bearer
 }
+body:json {
+  {
+    "judul": "Artikel Update",
+    "konten": "Isi artikel yang sudah diperbarui",
+    "status": "PUBLISHED"
+  }
+}
+
 auth:bearer {
   token: {{token}}
 }

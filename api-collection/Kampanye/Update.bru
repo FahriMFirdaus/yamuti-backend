@@ -3,16 +3,23 @@ meta {
   type: http
   seq: 4
 }
+
 put {
   url: {{base_url}}/api/kampanye/{{kampanye_id}}
   body: json
   auth: bearer
 }
+
 auth:bearer {
   token: {{token}}
 }
+
 body:json {
   {
     "judul": "Kampanye Update"
   }
+}
+
+vars:pre-request {
+  kampanye_id: 019ef3e3-ecac-737c-ae08-3d25fd6e3696
 }

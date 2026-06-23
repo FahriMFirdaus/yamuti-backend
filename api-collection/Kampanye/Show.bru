@@ -3,8 +3,13 @@ meta {
   type: http
   seq: 3
 }
+
 get {
   url: {{base_url}}/api/kampanye/{{kampanye_id}}
   body: none
   auth: none
+}
+
+vars:pre-request {
+  kampanye_id: 019ef3e3-ecac-737c-ae08-3d25fd6e3696
 }
