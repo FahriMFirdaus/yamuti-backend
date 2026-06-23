@@ -12,6 +12,7 @@ auth:bearer {
   token: {{token}}
 }
 body:multipart-form {
+  foto_identitas: @file()
   _method: PUT
   name: My Name Updated
   no_whatsapp: 081234567890

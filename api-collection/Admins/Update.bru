@@ -9,6 +9,7 @@ post {
   auth: bearer
 }
 body:multipart-form {
+  foto_identitas: @file()
   _method: PUT
   name: Admin Update
   status_pegawai: Aktif
