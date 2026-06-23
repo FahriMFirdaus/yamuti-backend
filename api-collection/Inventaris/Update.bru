@@ -3,16 +3,21 @@ meta {
   type: http
   seq: 5
 }
+
 put {
   url: {{base_url}}/api/inventaris/{{inventaris_id}}
   body: json
   auth: bearer
 }
+
 auth:bearer {
   token: {{token}}
 }
+
 body:json {
   {
     "nama_barang": "Laptop Update"
   }
 }
+
+
