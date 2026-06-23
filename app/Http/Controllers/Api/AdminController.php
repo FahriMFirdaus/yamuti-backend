@@ -27,7 +27,11 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'no_whatsapp' => 'nullable|string|max:20',
+            'no_hp' => 'nullable|string|max:20',
+            'nik' => 'nullable|string|max:20',
+            'skck' => 'nullable|string|max:255',
+            'alamat' => 'nullable|string',
+            'status_pegawai' => 'nullable|string|max:50',
             'role' => 'required|string|exists:roles,name'
         ]);
 
@@ -58,7 +62,11 @@ class AdminController extends Controller
                 Rule::unique('users')->ignore($admin->id),
             ],
             'password' => 'sometimes|string|min:8',
-            'no_whatsapp' => 'nullable|string|max:20',
+            'no_hp' => 'nullable|string|max:20',
+            'nik' => 'nullable|string|max:20',
+            'skck' => 'nullable|string|max:255',
+            'alamat' => 'nullable|string',
+            'status_pegawai' => 'nullable|string|max:50',
             'role' => 'sometimes|string|exists:roles,name'
         ]);
 
