@@ -19,3 +19,11 @@ body:json {
     "role": "admin"
   }
 }
+
+script:post-response {
+  if(res.status === 201 || res.status === 200) {
+    if(res.body && res.body.data && res.body.data.id) {
+      bru.setEnvVar("admin_id", res.body.data.id);
+    }
+  }
+}

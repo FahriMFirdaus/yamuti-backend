@@ -4,7 +4,7 @@ meta {
   seq: 3
 }
 patch {
-  url: {{base_url}}/api/kunjungan/REPLACE_ID/status
+  url: {{base_url}}/api/kunjungan/{{kunjungan_id}}/status
   body: json
   auth: bearer
 }

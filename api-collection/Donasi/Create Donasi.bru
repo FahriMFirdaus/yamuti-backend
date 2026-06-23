@@ -6,13 +6,25 @@ meta {
 post {
   url: {{base_url}}/api/donasi
   body: json
-  auth: none
+  auth: bearer
 }
 body:json {
   {
     "nama_donatur": "Hamba Allah",
     "no_whatsapp": "081234567890",
     "gross_amount": 500000,
-    "kampanye_id": "REPLACE_KAMPANYE_ID"
+    "kampanye_id": "{{kampanye_id}}"
   }
+}
+
+script:post-response {
+  if(res.status === 201 || res.status === 200) {
+    if(res.body && res.body.data && res.body.data.id) {
+      bru.setEnvVar("donasi_id", res.body.data.id);
+    }
+  }
+}
+
+auth:bearer {
+  token: {{token}}
 }

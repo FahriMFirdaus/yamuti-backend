@@ -19,3 +19,11 @@ body:json {
     "status": "PUBLISHED"
   }
 }
+
+script:post-response {
+  if(res.status === 201 || res.status === 200) {
+    if(res.body && res.body.data && res.body.data.id) {
+      bru.setEnvVar("artikel_id", res.body.data.id);
+    }
+  }
+}

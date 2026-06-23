@@ -20,5 +20,6 @@ body:json {
 script:post-response {
   if(res.status === 200) {
     bru.setEnvVar("token", res.body.data.token);
+    bru.setEnvVar("user_id", res.body.data.user.id);
   }
 }

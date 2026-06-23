@@ -17,3 +17,11 @@ body:json {
     "slot_waktu": "2026-06-25 10:00:00"
   }
 }
+
+script:post-response {
+  if(res.status === 201 || res.status === 200) {
+    if(res.body && res.body.data && res.body.data.id) {
+      bru.setEnvVar("kunjungan_id", res.body.data.id);
+    }
+  }
+}

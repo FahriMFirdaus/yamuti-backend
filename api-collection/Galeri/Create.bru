@@ -16,3 +16,11 @@ body:multipart-form {
   deskripsi: Foto kegiatan belajar mengajar
   // file: (pilih file di UI)
 }
+
+script:post-response {
+  if(res.status === 201 || res.status === 200) {
+    if(res.body && res.body.data && res.body.data.id) {
+      bru.setEnvVar("galeri_id", res.body.data.id);
+    }
+  }
+}
