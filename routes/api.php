@@ -87,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Epic 3.1: Artikel & Galeri (Hanya Hak Tulis/Ubah untuk Admin)
         Route::apiResource('kategori-artikel', KategoriArtikelController::class)->except(['index', 'show']);
         Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class)->except(['index', 'show']);
-        Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['index', 'show', 'update']);
+        Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['index', 'show']);
 
         // Kampanye Crowdfunding (Protected endpoints for Admin)
         Route::apiResource('kampanye', App\Http\Controllers\Api\KampanyeController::class)->except(['index', 'show']);

@@ -58,4 +58,24 @@ class GaleriController extends Controller
         $galeri->delete();
         return $this->successResponse(null, 'Foto galeri berhasil dihapus');
     }
+
+    public function update(Request $request, $id)
+    {
+        $galeri = Galeri::findOrFail($id);
+
+        $validated = $request->validate([
+            'judul' => 'sometimes|required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'file' => 'nullable|image|max:5120'
+        ]);
+
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('galeris', 's3');
+            $validated['file_url'] = Storage::disk('s3')->url($path);
+        }
+
+        $galeri->update($validated);
+
+        return $this->successResponse($galeri, 'Data galeri berhasil diperbarui');
+    }
 }

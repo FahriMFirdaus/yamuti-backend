@@ -1,0 +1,21 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/galeri/{{galeri_id}}
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:multipart-form {
+  _method: PUT
+  judul: Foto Galeri Updated
+  deskripsi: Deskripsi galeri yang diperbarui
+}
