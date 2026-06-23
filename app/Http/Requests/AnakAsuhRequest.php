@@ -15,6 +15,12 @@ class AnakAsuhRequest extends FormRequest
     {
         return [
             'nama' => ['required', 'string', 'max:255'],
+            'nik' => [
+                'nullable',
+                'string',
+                'size:16',
+                \Illuminate\Validation\Rule::unique('anak_asuhs', 'nik')->ignore($this->route('id'))
+            ],
             'no_kk' => ['nullable', 'string', 'size:16'],
             'no_akte' => ['nullable', 'string', 'max:255'],
             'tempat_lahir' => ['nullable', 'string', 'max:255'],

@@ -13,6 +13,7 @@ class AnakAsuh extends Model
 
     protected $fillable = [
         'nama',
+        'nik',
         'no_kk',
         'no_akte',
         'tempat_lahir',
