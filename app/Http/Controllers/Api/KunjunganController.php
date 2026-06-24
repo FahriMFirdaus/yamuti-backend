@@ -42,7 +42,11 @@ class KunjunganController extends Controller
 
     public function updateStatus(Request $request, $id): JsonResponse
     {
-        $status = strtoupper($request->input('status')); // APPROVED, REJECTED, COMPLETED
+        $validated = $request->validate([
+            'status' => 'required|string|in:APPROVED,REJECTED,COMPLETED'
+        ]);
+
+        $status = strtoupper($validated['status']);
         $adminId = $request->user()->id;
 
         if ($status === 'APPROVED') {
