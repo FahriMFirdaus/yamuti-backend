@@ -37,6 +37,13 @@ class MidtransWebhookController extends Controller
         Log::info("Midtrans Webhook Received for Order: $orderId, Status: $transactionStatus");
 
         if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
+            $donasi = \App\Models\Donasi::find($orderId);
+            if ($donasi) {
+                $donasi->update([
+                    'transaction_id' => $request->transaction_id,
+                    'payment_type' => $request->payment_type,
+                ]);
+            }
             $this->donasiService->updateStatus($orderId, 'PAID');
         } elseif ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
             $this->donasiService->updateStatus($orderId, 'FAILED');
