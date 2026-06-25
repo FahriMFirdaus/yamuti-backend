@@ -1,0 +1,28 @@
+meta {
+  name: Simulasi Webhook Palsu (Test Keamanan)
+  type: http
+  seq: 5
+}
+post {
+  url: {{base_url}}/api/midtrans/webhook
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "transaction_type": "on-us",
+    "transaction_time": "2026-06-25 10:00:00",
+    "transaction_status": "settlement",
+    "transaction_id": "b256394e-fcc2-418c-8f6e-c5c44597fc5f",
+    "status_message": "midtrans payment notification",
+    "status_code": "200",
+    "signature_key": "kunci_tanda_tangan_palsu_yang_pasti_ditolak_oleh_sistem_keamanan_yamuti_1234567890",
+    "settlement_time": "2026-06-25 10:01:00",
+    "payment_type": "qris",
+    "order_id": "11111111-2222-3333-4444-555555555555",
+    "merchant_id": "G372358971",
+    "gross_amount": "500000.00",
+    "fraud_status": "accept",
+    "currency": "IDR"
+  }
+}
