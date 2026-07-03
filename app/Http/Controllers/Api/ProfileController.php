@@ -50,4 +50,34 @@ class ProfileController extends Controller
 
         return $this->successResponse(null, 'Kata sandi berhasil diperbarui');
     }
+
+    public function kontakUtama(): JsonResponse
+    {
+        // Cari pengguna dengan role super_admin, prioritaskan yang punya nomor HP
+        $admin = \App\Models\User::role('super_admin')->whereNotNull('no_hp')->first();
+        
+        if (!$admin) {
+            $admin = \App\Models\User::role('super_admin')->first();
+        }
+
+        // Default fallback
+        $noWa = $admin && $admin->no_hp ? $admin->no_hp : '6281234567890';
+        
+        // Hapus karakter non-digit (seperti spasi, strip, atau plus)
+        $noWa = preg_replace('/[^0-9]/', '', $noWa);
+
+        // Jika diawali dengan angka 0, ubah menjadi 62 agar format wa.me valid
+        if (str_starts_with($noWa, '0')) {
+            $noWa = '62' . substr($noWa, 1);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kontak utama berhasil diambil',
+            'data' => [
+                'no_whatsapp' => $noWa,
+                'nama_admin' => $admin ? $admin->name : 'Admin YAMUTI'
+            ]
+        ]);
+    }
 }
