@@ -22,4 +22,13 @@ class Galeri extends Model
     {
         return $this->belongsTo(User::class, 'diunggah_oleh');
     }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (!empty($array['file_url']) && !str_starts_with($array['file_url'], 'http')) {
+            $array['file_url'] = \Illuminate\Support\Facades\Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($array['file_url']);
+        }
+        return $array;
+    }
 }

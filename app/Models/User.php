@@ -54,4 +54,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Donasi::class);
     }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (!empty($array['foto_identitas']) && !str_starts_with($array['foto_identitas'], 'http')) {
+            $array['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($array['foto_identitas']);
+        }
+        return $array;
+    }
 }

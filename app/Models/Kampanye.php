@@ -26,4 +26,13 @@ class Kampanye extends Model
     {
         return $this->hasMany(Donasi::class);
     }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (!empty($array['thumbnail']) && !str_starts_with($array['thumbnail'], 'http')) {
+            $array['thumbnail'] = \Illuminate\Support\Facades\Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($array['thumbnail']);
+        }
+        return $array;
+    }
 }

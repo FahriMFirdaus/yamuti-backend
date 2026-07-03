@@ -43,4 +43,13 @@ class AnakAsuh extends Model
             set: fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
         );
     }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (!empty($array['foto_identitas']) && !str_starts_with($array['foto_identitas'], 'http')) {
+            $array['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($array['foto_identitas']);
+        }
+        return $array;
+    }
 }
