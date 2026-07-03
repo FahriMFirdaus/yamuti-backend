@@ -35,10 +35,10 @@ class Artikel extends Model
     {
         $array = parent::toArray();
         if (!empty($array['thumbnail_url']) && !str_starts_with($array['thumbnail_url'], 'http')) {
-            $array['thumbnail_url'] = \Illuminate\Support\Facades\Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($array['thumbnail_url']);
+            $array['thumbnail_url'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['thumbnail_url']);
         }
         if (!empty($array['file_url']) && !str_starts_with($array['file_url'], 'http')) {
-            $array['file_url'] = \Illuminate\Support\Facades\Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($array['file_url']);
+            $array['file_url'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['file_url']);
         }
         return $array;
     }

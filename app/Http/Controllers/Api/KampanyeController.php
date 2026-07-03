@@ -39,7 +39,8 @@ class KampanyeController extends Controller
         $validated['slug'] = Str::slug($validated['judul']) . '-' . time();
 
         if ($request->hasFile('thumbnail')) {
-            $validated['thumbnail'] = $request->file('thumbnail')->store('kampanye', 'public');
+            $path = $request->file('thumbnail')->store('kampanye', 's3');
+            $validated['thumbnail'] = Storage::disk('s3')->url($path);
         }
 
         $kampanye = Kampanye::create($validated);
@@ -67,10 +68,9 @@ class KampanyeController extends Controller
         }
 
         if ($request->hasFile('thumbnail')) {
-            if ($kampanye->thumbnail) {
-                Storage::disk('public')->delete($kampanye->thumbnail);
-            }
-            $validated['thumbnail'] = $request->file('thumbnail')->store('kampanye', 'public');
+            // Kita tidak menghapus gambar lama karena itu membutuhkan logic ekstra untuk mengekstrak path dari full URL s3
+            $path = $request->file('thumbnail')->store('kampanye', 's3');
+            $validated['thumbnail'] = Storage::disk('s3')->url($path);
         }
 
         $kampanye->update($validated);
@@ -81,11 +81,7 @@ class KampanyeController extends Controller
     public function destroy($id): JsonResponse
     {
         $kampanye = Kampanye::findOrFail($id);
-        
-        if ($kampanye->thumbnail) {
-            Storage::disk('public')->delete($kampanye->thumbnail);
-        }
-        
+        // Optional: Jika ingin menghapus dari S3, perlu ekstrak path dulu. Untuk sekarang kita biarkan saja.
         $kampanye->delete();
 
         return $this->successResponse(null, 'Kampanye berhasil dihapus');

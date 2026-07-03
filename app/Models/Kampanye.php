@@ -31,7 +31,7 @@ class Kampanye extends Model
     {
         $array = parent::toArray();
         if (!empty($array['thumbnail']) && !str_starts_with($array['thumbnail'], 'http')) {
-            $array['thumbnail'] = \Illuminate\Support\Facades\Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($array['thumbnail']);
+            $array['thumbnail'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['thumbnail']);
         }
         return $array;
     }
