@@ -25,18 +25,25 @@ class BroadcastController extends Controller
 
         $targets = collect();
 
-        // Mengumpulkan nomor berdasarkan target
+        // Mode Operasional Nyata
         if ($validated['target_penerima'] === 'donatur' || $validated['target_penerima'] === 'semua') {
-            $donaturs = Donasi::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
-            $targets = $targets->merge($donaturs);
+            // 1. Ambil nomor dari orang yang pernah berdonasi (Guest/Tamu maupun terdaftar)
+            $donatursDariTransaksi = Donasi::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
+            $targets = $targets->merge($donatursDariTransaksi);
+            
+            // 2. Ambil nomor dari Akun User yang sudah mendaftar sebagai 'donatur' (meskipun belum berdonasi)
+            $donatursTerdaftar = User::role('donatur')->whereNotNull('no_hp')->pluck('no_hp');
+            $targets = $targets->merge($donatursTerdaftar);
         }
 
         if ($validated['target_penerima'] === 'umum' || $validated['target_penerima'] === 'semua') {
+            // Ambil nomor dari masyarakat yang pernah melakukan Kunjungan
             $kunjungans = Kunjungan::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
             $targets = $targets->merge($kunjungans);
         }
         
         if ($validated['target_penerima'] === 'semua') {
+            // Jika dikirim ke semua, masukkan juga seluruh akun (termasuk admin)
             $users = User::whereNotNull('no_hp')->pluck('no_hp');
             $targets = $targets->merge($users);
         }
