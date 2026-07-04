@@ -20,7 +20,7 @@ class BroadcastController extends Controller
     {
         $validated = $request->validate([
             'pesan' => 'required|string',
-            'target_penerima' => 'required|in:donatur,umum,semua'
+            'target_penerima' => 'required|in:donatur,kunjungan,semua'
         ]);
 
         $targets = collect();
@@ -36,7 +36,7 @@ class BroadcastController extends Controller
             $targets = $targets->merge($donatursTerdaftar);
         }
 
-        if ($validated['target_penerima'] === 'umum' || $validated['target_penerima'] === 'semua') {
+        if ($validated['target_penerima'] === 'kunjungan' || $validated['target_penerima'] === 'semua') {
             // Ambil nomor dari masyarakat yang pernah melakukan Kunjungan
             $kunjungans = Kunjungan::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
             $targets = $targets->merge($kunjungans);
