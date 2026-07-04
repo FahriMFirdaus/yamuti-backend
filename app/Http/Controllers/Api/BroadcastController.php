@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Donasi;
+use App\Models\Kunjungan;
+use App\Models\User;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BroadcastController extends Controller
 {
@@ -15,17 +20,81 @@ class BroadcastController extends Controller
     {
         $validated = $request->validate([
             'pesan' => 'required|string',
-            'target_penerima' => 'required|in:donatur,umum,semua'
+            'target_penerima' => 'required|in:donatur,umum,semua',
+            // Rahasia untuk sidang: Jika diisi, broadcast HANYA akan dikirim ke nomor ini (untuk demonstrasi dosen)
+            'test_number' => 'nullable|string'
         ]);
 
-        // Simulasi pengiriman broadcast message
-        // Logika aslinya akan mengambil data nomor telepon berdasarkan target_penerima, 
-        // lalu memanggil service WhatsApp gateway atau Email.
+        $targets = collect();
 
-        return $this->successResponse([
-            'pesan' => $validated['pesan'],
-            'target' => $validated['target_penerima'],
-            'status' => 'queued'
-        ], 'Pesan broadcast sedang diproses untuk dikirim');
+        if (!empty($validated['test_number'])) {
+            // Mode Demonstrasi Sidang
+            $targets->push($validated['test_number']);
+        } else {
+            // Mode Operasional Nyata
+            if ($validated['target_penerima'] === 'donatur' || $validated['target_penerima'] === 'semua') {
+                $donaturs = Donasi::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
+                $targets = $targets->merge($donaturs);
+            }
+
+            if ($validated['target_penerima'] === 'umum' || $validated['target_penerima'] === 'semua') {
+                $kunjungans = Kunjungan::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
+                $targets = $targets->merge($kunjungans);
+            }
+            
+            if ($validated['target_penerima'] === 'semua') {
+                $users = User::whereNotNull('no_hp')->pluck('no_hp');
+                $targets = $targets->merge($users);
+            }
+        }
+
+        // Bersihkan dan standarisasi nomor HP ke format yang diterima WA/Fonnte
+        $validNumbers = $targets->map(function ($num) {
+            $cleaned = preg_replace('/[^0-9]/', '', $num);
+            if (str_starts_with($cleaned, '0')) {
+                return '62' . substr($cleaned, 1);
+            }
+            return $cleaned;
+        })->filter(function ($num) {
+            return strlen($num) >= 10;
+        })->unique()->values()->toArray();
+
+        if (empty($validNumbers)) {
+            return $this->errorResponse('Tidak ada target nomor HP yang valid untuk dikirim.', 400);
+        }
+
+        // Fonnte menerima multiple numbers dipisahkan koma
+        $targetString = implode(',', $validNumbers);
+
+        try {
+            // Menggunakan token yang diberikan untuk sidang
+            $token = env('FONNTE_TOKEN', 'Pz37ptpxRHQpUK4WGETN');
+
+            $response = Http::withHeaders([
+                'Authorization' => $token,
+            ])->post('https://api.fonnte.com/send', [
+                'target' => $targetString,
+                'message' => $validated['pesan'],
+                'countryCode' => '62', // Otomatis meng-handle format 08 menjadi 628
+            ]);
+
+            $result = $response->json();
+
+            if ($response->successful() && isset($result['status']) && $result['status'] === true) {
+                return $this->successResponse([
+                    'pesan' => $validated['pesan'],
+                    'target_count' => count($validNumbers),
+                    'numbers_sent' => $validNumbers,
+                    'fonnte_response' => $result
+                ], 'Hore! Pesan broadcast berhasil ditembakkan ke WhatsApp via Fonnte.');
+            } else {
+                Log::error('Fonnte API Error', ['response' => $result]);
+                return $this->errorResponse('Gagal mengirim pesan dari sisi provider Fonnte', 500, $result);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Broadcast Exception: ' . $e->getMessage());
+            return $this->errorResponse('Terjadi kesalahan sistem saat menghubungi Fonnte', 500, $e->getMessage());
+        }
     }
 }
