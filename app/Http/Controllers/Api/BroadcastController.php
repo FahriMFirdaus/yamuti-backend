@@ -75,6 +75,7 @@ class BroadcastController extends Controller
                 'target' => $targetString,
                 'message' => $validated['pesan'],
                 'countryCode' => '62', // Otomatis meng-handle format 08 menjadi 628
+                'delay' => '5-10' // Anti-ban: Jeda acak 5 sampai 10 detik antar setiap pengiriman pesan
             ]);
 
             $result = $response->json();
