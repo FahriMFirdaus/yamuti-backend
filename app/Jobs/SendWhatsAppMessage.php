@@ -41,7 +41,7 @@ class SendWhatsAppMessage implements ShouldQueue
     public function handle(): void
     {
         // Menggunakan Fonnte API sebagai Third-Party WA Gateway (Pengganti Baileys)
-        $token = env('FONNTE_TOKEN');
+        $token = env('FONNTE_TOKEN', 'Pz37ptpxRHQpUK4WGETN');
         
         if (!$token) {
             Log::warning('Fonnte token tidak ditemukan, pesan WA tidak dikirim.');
