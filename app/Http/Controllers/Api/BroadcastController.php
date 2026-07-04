@@ -20,32 +20,25 @@ class BroadcastController extends Controller
     {
         $validated = $request->validate([
             'pesan' => 'required|string',
-            'target_penerima' => 'required|in:donatur,umum,semua',
-            // Rahasia untuk sidang: Jika diisi, broadcast HANYA akan dikirim ke nomor ini (untuk demonstrasi dosen)
-            'test_number' => 'nullable|string'
+            'target_penerima' => 'required|in:donatur,umum,semua'
         ]);
 
         $targets = collect();
 
-        if (!empty($validated['test_number'])) {
-            // Mode Demonstrasi Sidang
-            $targets->push($validated['test_number']);
-        } else {
-            // Mode Operasional Nyata
-            if ($validated['target_penerima'] === 'donatur' || $validated['target_penerima'] === 'semua') {
-                $donaturs = Donasi::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
-                $targets = $targets->merge($donaturs);
-            }
+        // Mengumpulkan nomor berdasarkan target
+        if ($validated['target_penerima'] === 'donatur' || $validated['target_penerima'] === 'semua') {
+            $donaturs = Donasi::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
+            $targets = $targets->merge($donaturs);
+        }
 
-            if ($validated['target_penerima'] === 'umum' || $validated['target_penerima'] === 'semua') {
-                $kunjungans = Kunjungan::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
-                $targets = $targets->merge($kunjungans);
-            }
-            
-            if ($validated['target_penerima'] === 'semua') {
-                $users = User::whereNotNull('no_hp')->pluck('no_hp');
-                $targets = $targets->merge($users);
-            }
+        if ($validated['target_penerima'] === 'umum' || $validated['target_penerima'] === 'semua') {
+            $kunjungans = Kunjungan::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
+            $targets = $targets->merge($kunjungans);
+        }
+        
+        if ($validated['target_penerima'] === 'semua') {
+            $users = User::whereNotNull('no_hp')->pluck('no_hp');
+            $targets = $targets->merge($users);
         }
 
         // Bersihkan dan standarisasi nomor HP ke format yang diterima WA/Fonnte
@@ -67,7 +60,6 @@ class BroadcastController extends Controller
         $targetString = implode(',', $validNumbers);
 
         try {
-            // Menggunakan token yang diberikan untuk sidang
             $token = env('FONNTE_TOKEN', 'Pz37ptpxRHQpUK4WGETN');
 
             $response = Http::withHeaders([
