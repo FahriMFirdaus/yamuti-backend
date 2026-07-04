@@ -110,7 +110,6 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Kunjungan (Terlindungi)
         Route::get('/kunjungan', [KunjunganController::class, 'index']);
-        Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
         Route::patch('/kunjungan/{id}/status', [KunjunganController::class, 'updateStatus']);
     });
 });
@@ -133,6 +132,7 @@ Route::get('/galeri/{id}', [\App\Http\Controllers\Api\GaleriController::class, '
 
 // Endpoint publik untuk pendaftaran tamu Kunjungan
 Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
+Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
 
 // Endpoint publik untuk mendapatkan kontak admin utama
 Route::get('/kontak-utama', [\App\Http\Controllers\Api\ProfileController::class, 'kontakUtama']);
