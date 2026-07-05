@@ -21,6 +21,8 @@ class TransaksiKeuangan extends Model
         'created_by'
     ];
 
+    protected $appends = ['status', 'amountRaw'];
+
     public function donasi()
     {
         return $this->belongsTo(Donasi::class);
@@ -29,5 +31,17 @@ class TransaksiKeuangan extends Model
     public function mutasiBarang()
     {
         return $this->hasMany(MutasiBarang::class);
+    }
+
+    // Accessor untuk kompatibilitas Frontend (Draft/Selesai)
+    public function getStatusAttribute()
+    {
+        return $this->nominal == 0 ? 'Draft' : 'Selesai';
+    }
+
+    // Accessor untuk kompatibilitas Frontend (amountRaw)
+    public function getAmountRawAttribute()
+    {
+        return $this->nominal;
     }
 }

@@ -58,4 +58,24 @@ class TransaksiKeuanganController extends Controller
 
         return $this->successResponse($data, 'Laporan keuangan berhasil diambil');
     }
+
+    public function update(Request $request, $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'amountRaw' => 'required|numeric|min:1',
+            'status' => 'nullable|string'
+        ]);
+
+        $transaksi = \App\Models\TransaksiKeuangan::findOrFail($id);
+        
+        // Hapus tanda "DRAFT: " dari deskripsi jika sebelumnya berupa draft
+        $deskripsi = str_replace('DRAFT: ', '', $transaksi->deskripsi);
+
+        $transaksi->update([
+            'nominal' => $validated['amountRaw'],
+            'deskripsi' => $deskripsi
+        ]);
+
+        return $this->successResponse($transaksi, 'Transaksi keuangan berhasil diperbarui dan disahkan');
+    }
 }
