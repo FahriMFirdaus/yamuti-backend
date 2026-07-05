@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\KategoriArtikelController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\BroadcastController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\LandingController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:public-forms');
@@ -136,6 +137,13 @@ Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
 
 // Endpoint publik untuk mendapatkan kontak admin utama
 Route::get('/kontak-utama', [\App\Http\Controllers\Api\ProfileController::class, 'kontakUtama']);
+
+// Endpoint publik untuk Landing Page Frontend
+Route::prefix('landing')->group(function () {
+    Route::get('/impact', [LandingController::class, 'impact']);
+    Route::get('/benefits', [LandingController::class, 'benefits']);
+    Route::get('/slides', [LandingController::class, 'slides']);
+});
 
 // Rute Profil & Riwayat (Bisa diakses oleh semua User yang sedang login)
 Route::middleware('auth:sanctum')->group(function () {
