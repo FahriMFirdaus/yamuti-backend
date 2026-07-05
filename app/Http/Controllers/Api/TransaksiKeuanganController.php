@@ -41,12 +41,21 @@ class TransaksiKeuanganController extends Controller
 
     public function laporan(Request $request): JsonResponse
     {
+        $tanggal = $request->query('tanggal'); // format YYYY-MM-DD
         $bulan = $request->query('bulan', date('m'));
         $tahun = $request->query('tahun', date('Y'));
         $jenis = $request->query('jenis'); // pemasukan/pengeluaran -> Debit/Kredit
 
-        $query = \App\Models\TransaksiKeuangan::whereYear('created_at', $tahun)
-                    ->whereMonth('created_at', $bulan);
+        $query = \App\Models\TransaksiKeuangan::query();
+
+        // Jika parameter tanggal spesifik dikirim, utamakan pencarian per hari
+        if ($tanggal) {
+            $query->whereDate('created_at', $tanggal);
+        } else {
+            // Jika tidak, gunakan pencarian bulanan (default)
+            $query->whereYear('created_at', $tahun)
+                  ->whereMonth('created_at', $bulan);
+        }
         
         if ($jenis === 'pemasukan') {
             $query->where('tipe_transaksi', 'Debit');
