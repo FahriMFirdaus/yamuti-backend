@@ -13,9 +13,10 @@ class GaleriController extends Controller
 {
     use ApiResponse;
 
-    public function index()
+    public function index(Request $request)
     {
-        $galeris = Galeri::with('pengunggah:id,name')->latest()->paginate(15);
+        $perPage = $request->query('per_page', 15);
+        $galeris = Galeri::with('pengunggah:id,name')->latest()->paginate($perPage);
         return $this->successResponse($galeris, 'Data galeri berhasil diambil');
     }
 
@@ -29,8 +30,14 @@ class GaleriController extends Controller
 
         $fileUrl = null;
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('galeris', 's3');
-            $fileUrl = Storage::disk('s3')->url($path);
+            $hasS3 = !empty(config('filesystems.disks.s3.bucket'));
+            if ($hasS3) {
+                $path = $request->file('file')->store('galeris', 's3');
+                $fileUrl = Storage::disk('s3')->url($path);
+            } else {
+                $path = $request->file('file')->store('galeris', 'public');
+                $fileUrl = asset(Storage::url($path));
+            }
         }
 
         $galeri = Galeri::create([

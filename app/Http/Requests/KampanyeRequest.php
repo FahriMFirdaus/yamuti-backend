@@ -19,7 +19,7 @@ class KampanyeRequest extends FormRequest
             'target_donasi' => 'required|numeric|min:0',
             'tanggal_mulai' => 'nullable|date',
             'tanggal_berakhir' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'status' => 'nullable|string|in:Aktif,Selesai,Dibatalkan',
+            'status' => 'nullable|string|in:Aktif,Selesai,Dibatalkan,Draft,aktif,selesai,dibatalkan,draft',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
     }

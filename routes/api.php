@@ -17,12 +17,17 @@ use App\Http\Controllers\Api\LandingController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:public-forms');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:public-forms');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
     // Dummy login route to catch unauthenticated API requests without Accept: application/json
     Route::get('/login', function () {
         return response()->json(['success' => false, 'message' => 'Unauthenticated or Token Invalid.'], 401);
     })->name('login');
-    // TODO: forgot-password and reset-password
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:reset-password');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:reset-password');
+    
+    // Google OAuth
+    Route::get('/google/redirect', [\App\Http\Controllers\Api\SocialiteController::class, 'redirect']);
+    Route::get('/google/callback', [\App\Http\Controllers\Api\SocialiteController::class, 'callback']);
 });
 
 Route::get('/setup-db', function (Request $request) {
@@ -77,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Core Business Logic
         Route::apiResource('anak-asuh', AnakAsuhController::class);
+        Route::apiResource('orang-tua-asuh', App\Http\Controllers\Api\OrangTuaAsuhController::class);
         Route::apiResource('inventaris', InventarisController::class);
         Route::get('/inventaris/{inventarisId}/mutasi', [App\Http\Controllers\Api\MutasiBarangController::class, 'index']);
         Route::post('/inventaris/{inventarisId}/mutasi', [App\Http\Controllers\Api\MutasiBarangController::class, 'store']);
@@ -86,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/keuangan/laporan', [TransaksiKeuanganController::class, 'laporan']);
         
         // Epic 3.1: Artikel & Galeri (Hanya Hak Tulis/Ubah untuk Admin)
+        Route::post('/artikel/upload-image', [App\Http\Controllers\Api\ArtikelController::class, 'uploadImage']);
         Route::apiResource('kategori-artikel', KategoriArtikelController::class)->except(['index', 'show']);
         Route::apiResource('artikel', App\Http\Controllers\Api\ArtikelController::class)->except(['index', 'show']);
         Route::apiResource('galeri', App\Http\Controllers\Api\GaleriController::class)->except(['index', 'show']);
@@ -94,12 +101,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('kampanye', App\Http\Controllers\Api\KampanyeController::class)->except(['index', 'show']);
 
         // Broadcast
-        Route::post('/broadcast/send', [BroadcastController::class, 'send']);
+        Route::post('/broadcast/send', [BroadcastController::class, 'send'])->middleware('throttle:broadcast');
 
         // Donasi & Kas
         Route::get('/donasi', [DonasiController::class, 'index']);
         Route::get('/donasi/{id}', [DonasiController::class, 'show']);
         Route::patch('/donasi/{id}/verify', [DonasiController::class, 'verify']);
+        Route::post('/donasi/manual', [\App\Http\Controllers\Api\DonasiController::class, 'storeManual'])->middleware('throttle:public-forms');
         
         // Data Donatur (CRM)
         Route::get('/donatur', [\App\Http\Controllers\Api\DonaturController::class, 'index']);
@@ -131,8 +139,9 @@ Route::get('/kategori-artikel/{id}', [\App\Http\Controllers\Api\KategoriArtikelC
 Route::get('/galeri', [\App\Http\Controllers\Api\GaleriController::class, 'index']);
 Route::get('/galeri/{id}', [\App\Http\Controllers\Api\GaleriController::class, 'show']);
 
-// Endpoint publik untuk pendaftaran tamu Kunjungan
-Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
+// Endpoint publik untuk Kunjungan
+Route::get('/kunjungan/ketersediaan', [\App\Http\Controllers\Api\KunjunganController::class, 'ketersediaan']);
+Route::post('/kunjungan', [\App\Http\Controllers\Api\KunjunganController::class, 'store'])->middleware('throttle:public-forms');
 Route::get('/kunjungan/{id}', [KunjunganController::class, 'show']);
 
 // Endpoint publik untuk mendapatkan kontak admin utama
@@ -143,6 +152,8 @@ Route::prefix('landing')->group(function () {
     Route::get('/impact', [LandingController::class, 'impact']);
     Route::get('/benefits', [LandingController::class, 'benefits']);
     Route::get('/slides', [LandingController::class, 'slides']);
+    Route::get('/doa', [LandingController::class, 'doa']);
+    Route::get('/operasional', [\App\Http\Controllers\Api\SettingController::class, 'getLokasiOperasional']);
 });
 
 // Rute Profil & Riwayat (Bisa diakses oleh semua User yang sedang login)
@@ -155,4 +166,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Riwayat
     Route::get('/user/riwayat-donasi', [DonasiController::class, 'riwayat']);
     Route::get('/user/riwayat-kunjungan', [KunjunganController::class, 'riwayat']);
+
+    // Keranjang Donasi
+    Route::get('/keranjang/count', [\App\Http\Controllers\Api\KeranjangController::class, 'count']);
+    Route::get('/keranjang', [\App\Http\Controllers\Api\KeranjangController::class, 'index']);
+    Route::post('/keranjang', [\App\Http\Controllers\Api\KeranjangController::class, 'store']);
+    Route::delete('/keranjang/{id}', [\App\Http\Controllers\Api\KeranjangController::class, 'destroy']);
+    Route::post('/keranjang/checkout', [\App\Http\Controllers\Api\KeranjangController::class, 'checkout']);
+
+    // Settings
+    Route::get('/settings', [\App\Http\Controllers\Api\SettingController::class, 'index']);
+    Route::post('/settings/split-rule', [\App\Http\Controllers\Api\SettingController::class, 'updateSplitRule']);
+    Route::get('/settings/lokasi-operasional', [\App\Http\Controllers\Api\SettingController::class, 'getLokasiOperasional']);
+    Route::post('/settings/lokasi-operasional', [\App\Http\Controllers\Api\SettingController::class, 'updateLokasiOperasional']);
 });

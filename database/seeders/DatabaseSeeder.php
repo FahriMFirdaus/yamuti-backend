@@ -40,10 +40,13 @@ class DatabaseSeeder extends Seeder
         );
         $admin->assignRole($adminRole);
 
-        // 3. Generate Data Palsu (Dummy) untuk Keperluan Frontend (Di non-aktifkan di production karena faker tidak diinstall)
-        // AnakAsuh::factory(50)->create();
-        // Inventaris::factory(20)->create();
-        // Donasi::factory(100)->create();
-        // Kunjungan::factory(30)->create();
+        // 3. Generate Data Palsu (Dummy) untuk Keperluan Frontend
+        $this->call([
+            AnakAsuhSeeder::class,
+            KampanyeSeeder::class,
+            InventarisSeeder::class,
+            DonasiDoaSeeder::class,
+            GaleriSeeder::class,
+        ]);
     }
 }

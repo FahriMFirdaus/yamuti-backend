@@ -4,7 +4,10 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Str;
 
 class AuthService extends BaseService
 {
@@ -63,5 +66,42 @@ class AuthService extends BaseService
     {
         // Mencabut token yang sedang digunakan saat ini
         $user->currentAccessToken()->delete();
+    }
+
+    public function forgotPassword(array $data): string
+    {
+        $status = Password::broker()->sendResetLink(
+            $data
+        );
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            throw ValidationException::withMessages([
+                'email' => [__($status)],
+            ]);
+        }
+
+        return __($status);
+    }
+
+    public function resetPassword(array $data): string
+    {
+        $status = Password::broker()->reset(
+            $data,
+            function ($user, $password) {
+                $user->password = Hash::make($password);
+                $user->setRememberToken(Str::random(60));
+                $user->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => [__($status)],
+            ]);
+        }
+
+        return __($status);
     }
 }

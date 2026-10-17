@@ -19,7 +19,7 @@ class AuthTest extends TestCase
             'email' => 'test@yamuti.org',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'no_whatsapp' => '08123456789'
+            'no_hp' => '08123456789'
         ]);
 
         $response->assertStatus(201)

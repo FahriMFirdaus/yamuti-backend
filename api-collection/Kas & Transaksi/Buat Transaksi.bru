@@ -1,0 +1,21 @@
+meta {
+  name: Buat Transaksi
+  type: http
+  seq: 2
+}
+post {
+  url: {{base_url}}/api/transaksi-keuangan
+  body: json
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:json {
+  {
+    "jenis_kas": "Pusat",
+    "tipe_transaksi": "Debit",
+    "nominal": 500000,
+    "deskripsi": "Donasi manual hamba Allah"
+  }
+}

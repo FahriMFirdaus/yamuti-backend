@@ -17,17 +17,21 @@ class LandingController extends Controller
     public function impact(): JsonResponse
     {
         $jiwaTerbantu = AnakAsuh::count();
-        $danaTersalurkan = Donasi::where('status', 'PAID')->sum('gross_amount');
-        $programBerjalan = Kampanye::count();
+        $danaTersalurkan = Donasi::whereIn('status', ['PAID', 'settlement', 'success'])->sum('gross_amount');
+        $programBerjalan = Kampanye::where('status', 'Aktif')->count();
+        $totalDonatur = Donasi::whereIn('status', ['PAID', 'settlement', 'success'])
+            ->select('nama_donatur')
+            ->distinct()
+            ->count();
 
-        // Format dana tersalurkan agar ringkas (misal: "Rp 20 Juta+")
+        // Format dana tersalurkan agar ringkas
         $formattedDana = $this->formatRupiah($danaTersalurkan);
 
-        // Jika data masih sedikit, kita bisa menambahkan fallback default agar tetap terlihat baik
         return response()->json([
-            "jiwaterbantu" => ($jiwaTerbantu > 0 ? $jiwaTerbantu : "20") . "+",
-            "danatersalurkan" => $danaTersalurkan > 0 ? $formattedDana . "+" : "Rp 20 Juta+",
-            "programberjalan" => ($programBerjalan > 0 ? $programBerjalan : "20") . "+",
+            "jiwaterbantu" => $jiwaTerbantu > 0 ? $jiwaTerbantu . "+" : "30+",
+            "danatersalurkan" => $danaTersalurkan > 0 ? $formattedDana : "Rp 0",
+            "programberjalan" => $programBerjalan > 0 ? $programBerjalan . "+" : "5+",
+            "total_donatur" => $totalDonatur > 0 ? $totalDonatur : 15,
             "pengabdian" => "12 Tahun"
         ]);
     }
@@ -111,5 +115,51 @@ class LandingController extends Controller
         }
 
         return response()->json($slides);
+    }
+
+    /**
+     * API 4: Titipan Doa Donatur
+     */
+    public function doa(): JsonResponse
+    {
+        $doas = Donasi::whereIn('status', ['PAID', 'settlement', 'success'])
+            ->whereNotNull('pesan')
+            ->where('pesan', '!=', '')
+            ->latest()
+            ->take(20)
+            ->get();
+
+        $result = $doas->map(function ($item) {
+            $isAnon = $item->is_anonymous;
+            $namaAsli = trim($item->nama_donatur);
+
+            if ($isAnon || strtolower($namaAsli) === 'hamba allah') {
+                $namaTampil = 'Hamba Allah';
+                $roleTampil = 'Hamba Allah';
+            } else {
+                // Samarkan nama seperti B*** T. atau Budi S***
+                $parts = explode(' ', $namaAsli);
+                if (count($parts) > 1) {
+                    $first = $parts[0];
+                    $second = $parts[1];
+                    $firstMasked = mb_substr($first, 0, 1) . '***';
+                    $secondInitial = mb_substr($second, 0, 1) . '.';
+                    $namaTampil = $firstMasked . ' ' . $secondInitial;
+                } else {
+                    $namaTampil = mb_substr($namaAsli, 0, 1) . '***';
+                }
+                $roleTampil = 'Orang Baik';
+            }
+
+            return [
+                'id' => (string) $item->id,
+                'nama' => $namaTampil,
+                'role' => $roleTampil,
+                'doa' => $item->pesan,
+                'tanggal' => $item->created_at ? $item->created_at->diffForHumans() : 'Baru saja',
+            ];
+        });
+
+        return response()->json($result);
     }
 }

@@ -23,7 +23,8 @@ class ProfileController extends Controller
         
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'no_hp' => 'sometimes|string|max:20',
+            'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+            'no_hp' => 'sometimes|string|min:9|max:15',
             'foto_identitas' => 'nullable|image|max:5120'
         ]);
 
@@ -32,7 +33,23 @@ class ProfileController extends Controller
             $validated['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
         }
 
+        $oldEmail = $user->email;
+        $oldNoHp = $user->no_hp;
+
         $user->update($validated);
+
+        $emailChanged = isset($validated['email']) && $validated['email'] !== $oldEmail;
+        $noHpChanged = isset($validated['no_hp']) && $validated['no_hp'] !== $oldNoHp;
+
+        if ($emailChanged && $oldNoHp) {
+            $pesan = "⚠️ *Peringatan Keamanan YAMUTI*\n\nEmail akun Anda baru saja diubah menjadi *" . $user->email . "*. Jika ini bukan Anda, segera amankan akun Anda atau hubungi Admin Yayasan.";
+            \App\Jobs\SendWhatsAppMessage::dispatch($oldNoHp, $pesan);
+        }
+
+        if ($noHpChanged && $oldNoHp) {
+            $pesan = "⚠️ *Peringatan Keamanan YAMUTI*\n\nNomor WhatsApp akun Anda baru saja diubah menjadi *" . $user->no_hp . "*. Jika ini bukan Anda, segera amankan akun Anda atau hubungi Admin Yayasan.";
+            \App\Jobs\SendWhatsAppMessage::dispatch($oldNoHp, $pesan);
+        }
 
         return $this->successResponse($user->load('roles'), 'Profil berhasil diperbarui');
     }

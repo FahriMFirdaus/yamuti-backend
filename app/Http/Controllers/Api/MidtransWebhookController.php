@@ -37,16 +37,35 @@ class MidtransWebhookController extends Controller
         Log::info("Midtrans Webhook Received for Order: $orderId, Status: $transactionStatus");
 
         if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
+            $status = 'PAID';
+        } elseif ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
+            $status = 'FAILED';
+        } else {
+            return response()->json(['message' => 'Status ignored']);
+        }
+
+        if (str_starts_with($orderId, 'GRP-')) {
+            $donasis = \App\Models\Donasi::where('payment_group_id', $orderId)->get();
+            foreach ($donasis as $donasi) {
+                if ($status === 'PAID') {
+                    $donasi->update([
+                        'transaction_id' => $request->transaction_id,
+                        'payment_type' => $request->payment_type,
+                    ]);
+                }
+                $this->donasiService->updateStatus($donasi->id, $status);
+            }
+        } else {
             $donasi = \App\Models\Donasi::find($orderId);
             if ($donasi) {
-                $donasi->update([
-                    'transaction_id' => $request->transaction_id,
-                    'payment_type' => $request->payment_type,
-                ]);
+                if ($status === 'PAID') {
+                    $donasi->update([
+                        'transaction_id' => $request->transaction_id,
+                        'payment_type' => $request->payment_type,
+                    ]);
+                }
+                $this->donasiService->updateStatus($orderId, $status);
             }
-            $this->donasiService->updateStatus($orderId, 'PAID');
-        } elseif ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
-            $this->donasiService->updateStatus($orderId, 'FAILED');
         }
 
         return response()->json(['message' => 'Webhook processed successfully']);

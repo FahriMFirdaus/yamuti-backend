@@ -20,7 +20,13 @@ class KampanyeController extends Controller
     {
         $query = Kampanye::query();
 
-        // Jika hanya ingin melihat yang aktif (untuk publik)
+        // Penyaringan Publik: Sembunyikan 'Draft' dan 'Dibatalkan' jika bukan user terautentikasi (Admin)
+        $user = $request->user('sanctum');
+        if (!$user) {
+            $query->whereNotIn('status', ['Draft', 'draft', 'Dibatalkan', 'dibatalkan']);
+        }
+
+        // Filter eksplisit dari request (berguna untuk dashboard admin)
         if ($request->has('status')) {
             $query->where('status', $request->query('status'));
         }

@@ -1,0 +1,19 @@
+meta {
+  name: Update Transaksi
+  type: http
+  seq: 3
+}
+put {
+  url: {{base_url}}/api/transaksi-keuangan/1
+  body: json
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}
+body:json {
+  {
+    "amountRaw": 1500000,
+    "status": "Selesai"
+  }
+}

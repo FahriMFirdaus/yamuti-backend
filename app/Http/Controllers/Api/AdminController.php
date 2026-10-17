@@ -16,8 +16,11 @@ class AdminController extends Controller
 
     public function index(): JsonResponse
     {
-        // Hanya ambil user dengan role admin dan super_admin
-        $admins = User::role(['super_admin', 'admin'])->with('roles')->get();
+        // Ambil semua user staf pengurus (kecuali peran donatur/guest biasa)
+        $admins = User::whereDoesntHave('roles', function ($q) {
+            $q->whereIn('name', ['donatur', 'guest']);
+        })->with('roles')->get();
+
         return $this->successResponse($admins, 'Daftar admin berhasil diambil');
     }
 

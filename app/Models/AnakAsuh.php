@@ -24,6 +24,20 @@ class AnakAsuh extends Model
         'kategori_bayi',
         'tanggal_masuk',
         'keterangan',
+        'status_keluarga',
+        'tingkat_pendidikan',
+        'nama_sekolah',
+        'golongan_darah',
+        'riwayat_penyakit',
+        'catatan_khusus',
+        'no_bpjs',
+        'has_akta_fisik',
+        'has_kk_fisik',
+        'has_ijazah_fisik',
+        'berat_badan',
+        'tinggi_badan',
+        'riwayat_alergi',
+        'status_imunisasi',
         'created_by',
         'updated_by'
     ];
@@ -31,18 +45,13 @@ class AnakAsuh extends Model
     protected $casts = [
         'tanggal_lahir' => 'date',
         'tanggal_masuk' => 'date',
+        'kategori_bayi' => 'boolean',
+        'has_akta_fisik' => 'boolean',
+        'has_kk_fisik' => 'boolean',
+        'has_ijazah_fisik' => 'boolean',
+        'berat_badan' => 'integer',
+        'tinggi_badan' => 'integer',
     ];
-
-    /**
-     * Memaksa konversi boolean menjadi string 'true' / 'false' untuk kompatibilitas PostgreSQL
-     */
-    protected function kategoriBayi(): \Illuminate\Database\Eloquent\Casts\Attribute
-    {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn ($value) => (bool) $value,
-            set: fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
-        );
-    }
 
     public function toArray()
     {
@@ -51,5 +60,10 @@ class AnakAsuh extends Model
             $array['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['foto_identitas']);
         }
         return $array;
+    }
+
+    public function orangTuaAsuh()
+    {
+        return $this->hasMany(OrangTuaAsuh::class, 'anak_asuh_id');
     }
 }

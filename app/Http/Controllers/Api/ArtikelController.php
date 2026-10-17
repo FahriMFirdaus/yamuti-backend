@@ -14,9 +14,10 @@ class ArtikelController extends Controller
 {
     use ApiResponse;
 
-    public function index()
+    public function index(Request $request)
     {
-        $artikels = Artikel::with('penulis:id,name')->latest()->paginate(15);
+        $perPage = $request->query('per_page', 15);
+        $artikels = Artikel::with(['penulis:id,name', 'kategoriArtikel:id,nama_kategori,slug'])->latest()->paginate($perPage);
         return $this->successResponse($artikels, 'Data artikel berhasil diambil');
     }
 
@@ -25,8 +26,8 @@ class ArtikelController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
-            'kategori' => 'nullable|string',
-            'thumbnail' => 'nullable|image|max:2048' // max 2MB
+            'kategori_id' => 'nullable|uuid|exists:kategori_artikels,id',
+            'thumbnail' => 'nullable|image|max:2048'
         ]);
 
         $thumbnailUrl = null;
@@ -37,11 +38,16 @@ class ArtikelController extends Controller
             $thumbnailUrl = Storage::disk('s3')->url($path);
         }
 
+        $kategoriId = $validated['kategori_id'] ?? null;
+        if ($kategoriId === 'null' || $kategoriId === '') {
+            $kategoriId = null;
+        }
+
         $artikel = Artikel::create([
             'judul' => $validated['judul'],
             'slug' => Str::slug($validated['judul']) . '-' . uniqid(),
             'konten' => $validated['konten'],
-            'kategori' => $validated['kategori'] ?? 'Berita',
+            'kategori_id' => $kategoriId,
             'thumbnail_url' => $thumbnailUrl,
             'penulis_id' => $request->user()->id,
         ]);
@@ -54,7 +60,11 @@ class ArtikelController extends Controller
 
     public function show($id)
     {
-        $artikel = Artikel::with('penulis:id,name')->findOrFail($id);
+        $artikel = Artikel::with(['penulis:id,name', 'kategoriArtikel:id,nama_kategori,slug'])
+            ->where('id', $id)
+            ->orWhere('slug', $id)
+            ->firstOrFail();
+            
         return $this->successResponse($artikel, 'Detail artikel');
     }
 
@@ -65,9 +75,15 @@ class ArtikelController extends Controller
         $validated = $request->validate([
             'judul' => 'sometimes|required|string|max:255',
             'konten' => 'sometimes|required|string',
-            'kategori' => 'nullable|string',
+            'kategori_id' => 'nullable|uuid|exists:kategori_artikels,id',
             'thumbnail' => 'nullable|image|max:2048'
         ]);
+
+        if (array_key_exists('kategori_id', $validated)) {
+            if ($validated['kategori_id'] === 'null' || $validated['kategori_id'] === '') {
+                $validated['kategori_id'] = null;
+            }
+        }
 
         if (isset($validated['judul'])) {
             $validated['slug'] = Str::slug($validated['judul']) . '-' . uniqid();
@@ -83,6 +99,28 @@ class ArtikelController extends Controller
         $artikel->update($validated);
 
         return $this->successResponse($artikel, 'Artikel berhasil diupdate');
+    }
+
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:5120', // max 5MB
+        ]);
+
+        if ($request->hasFile('image')) {
+            $hasS3 = !empty(config('filesystems.disks.s3.bucket'));
+            if ($hasS3) {
+                $path = $request->file('image')->store('artikels/content', 's3');
+                $url = Storage::disk('s3')->url($path);
+            } else {
+                $path = $request->file('image')->store('artikels/content', 'public');
+                $url = asset(Storage::url($path));
+            }
+
+            return $this->successResponse(['url' => $url], 'Foto berhasil diunggah');
+        }
+
+        return $this->errorResponse('Tidak ada berkas yang diunggah', 400);
     }
 
     public function destroy($id)

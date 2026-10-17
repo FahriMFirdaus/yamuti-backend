@@ -17,6 +17,7 @@ class Kunjungan extends Model
         'jumlah_pengunjung',
         'maksud',
         'slot_waktu',
+        'is_full_day',
         'status',
         'branch_id',
         'approved_by'
@@ -24,5 +25,6 @@ class Kunjungan extends Model
 
     protected $casts = [
         'slot_waktu' => 'datetime',
+        'is_full_day' => 'boolean',
     ];
 }

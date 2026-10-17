@@ -14,7 +14,7 @@ class TransaksiKeuanganRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_kas' => ['required', 'string', 'in:Pusat,Cabang'],
+            'jenis_kas' => ['required', 'string'],
             'tipe_transaksi' => ['required', 'string', 'in:Debit,Kredit'],
             'nominal' => ['required', 'numeric', 'min:100'],
             'deskripsi' => ['required', 'string'],

@@ -12,16 +12,23 @@ class Donasi extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
+        'payment_group_id',
         'user_id',
         'kampanye_id',
         'nama_donatur',
         'no_whatsapp',
+        'pesan',
         'gross_amount',
         'status',
         'payment_type',
         'transaction_id',
         'snap_token',
-        'payment_url'
+        'payment_url',
+        'is_anonymous'
+    ];
+
+    protected $casts = [
+        'is_anonymous' => 'boolean',
     ];
 
     public function kampanye()
@@ -32,5 +39,25 @@ class Donasi extends Model
     public function transaksiKeuangan()
     {
         return $this->hasMany(TransaksiKeuangan::class);
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        
+        // Proteksi Privasi Hamba Allah
+        if ($this->is_anonymous) {
+            // Hilangkan relasi user agar avatar asli tidak bocor ke publik
+            if (isset($array['user'])) {
+                $array['user'] = null;
+            }
+            
+            // Opsional: Pastikan nama_donatur selalu disamarkan jika API diakses tanpa sengaja membocorkan
+            if (empty($array['nama_donatur']) || strtolower($array['nama_donatur']) !== 'hamba allah') {
+                $array['nama_donatur'] = 'Hamba Allah';
+            }
+        }
+
+        return $array;
     }
 }

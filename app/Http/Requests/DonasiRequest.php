@@ -15,10 +15,21 @@ class DonasiRequest extends FormRequest
     {
         return [
             'nama_donatur' => ['required', 'string', 'max:255'],
-            'no_whatsapp' => ['nullable', 'string', 'max:20'],
-            'gross_amount' => ['required', 'numeric', 'min:1000'],
+            'no_whatsapp' => ['required', 'string', 'min:9', 'max:15'],
+            'gross_amount' => ['required', 'numeric', 'min:10000'],
             'payment_type' => ['nullable', 'string', 'max:100'],
             'kampanye_id' => ['nullable', 'exists:kampanyes,id'],
+            'pesan' => ['nullable', 'string', 'max:500'],
+            'is_anonymous' => ['nullable', 'boolean'],
         ];
+    }
+
+    protected function prepareForValidation()
+    {
+        if ($this->has('is_anonymous')) {
+            $this->merge([
+                'is_anonymous' => filter_var($this->is_anonymous, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false,
+            ]);
+        }
     }
 }

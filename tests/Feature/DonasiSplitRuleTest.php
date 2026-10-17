@@ -31,20 +31,20 @@ class DonasiSplitRuleTest extends TestCase
         $service = app(DonasiService::class);
         $service->updateStatus($donasi->id, 'PAID');
 
-        // 3. Assert: Pastikan ada 2 record di TransaksiKeuangan (1 Pusat, 1 Cabang)
-        $this->assertDatabaseCount('transaksi_keuangans', 2);
+        // 3. Assert: Pastikan ada 4 record di TransaksiKeuangan sesuai default split rule
+        $this->assertDatabaseCount('transaksi_keuangans', 4);
 
-        // Pusat 90% dari 1 juta = 900000
+        // Yayasan Tasikmalaya 75% dari 1 juta = 750000
         $this->assertDatabaseHas('transaksi_keuangans', [
-            'jenis_kas' => 'Pusat',
+            'jenis_kas' => 'Yayasan Tasikmalaya',
             'tipe_transaksi' => 'Debit',
-            'nominal' => 900000,
+            'nominal' => 750000,
             'donasi_id' => $donasi->id,
         ]);
 
-        // Cabang 10% dari 1 juta = 100000 (sebagai biaya operasional/hak amilin)
+        // Operasional Website 10% dari 1 juta = 100000
         $this->assertDatabaseHas('transaksi_keuangans', [
-            'jenis_kas' => 'Cabang',
+            'jenis_kas' => 'Operasional Website',
             'tipe_transaksi' => 'Debit',
             'nominal' => 100000,
             'donasi_id' => $donasi->id,

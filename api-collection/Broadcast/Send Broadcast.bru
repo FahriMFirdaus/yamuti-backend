@@ -3,17 +3,20 @@ meta {
   type: http
   seq: 1
 }
+
 post {
   url: {{base_url}}/api/broadcast/send
   body: json
   auth: bearer
 }
+
 auth:bearer {
   token: {{token}}
 }
+
 body:json {
   {
-    "pesan": "Assalamu'alaikum donatur tercinta, ini adalah bukti nyata integrasi API Fonnte dari sistem YAMUTI.",
-    "target_penerima": "donatur"
+    "pesan": "Halo! Ini adalah tes Broadcast ke semua orang di YAMUTI.",
+    "target_penerima": "umum"
   }
 }

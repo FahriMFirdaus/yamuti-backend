@@ -23,8 +23,73 @@ class KunjunganController extends Controller
     // Endpoint Publik
     public function store(KunjunganRequest $request): JsonResponse
     {
-        $data = $this->kunjunganService->requestKunjungan($request->validated());
+        $validatedData = $request->validated();
+        if (isset($validatedData['is_full_day'])) {
+            $validatedData['is_full_day'] = filter_var($validatedData['is_full_day'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+        } else {
+            $validatedData['is_full_day'] = 'false';
+        }
+        
+        $data = $this->kunjunganService->requestKunjungan($validatedData);
         return $this->successResponse($data, 'Permintaan kunjungan berhasil diajukan, menunggu persetujuan admin', 201);
+    }
+
+    public function ketersediaan(Request $request): JsonResponse
+    {
+        $tanggal = $request->query('tanggal');
+        if (!$tanggal) {
+            return $this->errorResponse('Parameter tanggal wajib diisi (Format: YYYY-MM-DD)', 400);
+        }
+
+        // Ambil jam operasional dari settings, atau gunakan default
+        $setting = \App\Models\Setting::where('key', 'jam_operasional_kunjungan')->first();
+        $defaultSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00"];
+        $slots = $setting ? $setting->value : $defaultSlots;
+
+        // Ambil kunjungan yang sudah dibooking pada tanggal tersebut (hindari status REJECTED atau DIBATALKAN)
+        $bookedKunjungan = \App\Models\Kunjungan::whereDate('slot_waktu', $tanggal)
+            ->whereNotIn('status', ['REJECTED', 'DIBATALKAN'])
+            ->get();
+
+        // Cek apakah ada booking FULL DAY
+        $hasFullDayBooking = $bookedKunjungan->contains('is_full_day', true);
+        
+        // Ekstrak jam yang sudah dibooking parsial (H:i)
+        $bookedTimes = $bookedKunjungan->where('is_full_day', false)->map(function ($k) {
+            return $k->slot_waktu->format('H:i');
+        })->toArray();
+
+        // Bentuk response
+        $ketersediaan = [];
+        
+        // Slot khusus Full Day
+        $ketersediaan[] = [
+            'jam' => 'FULL DAY',
+            'is_available' => !$hasFullDayBooking && count($bookedTimes) === 0
+        ];
+
+        // Slot per jam
+        foreach ($slots as $slot) {
+            $ketersediaan[] = [
+                'jam' => $slot,
+                'is_available' => !$hasFullDayBooking && !in_array($slot, $bookedTimes)
+            ];
+        }
+
+        // Tambahkan jam khusus (custom) yang sudah dibooking agar muncul di UI sebagai "Penuh/Disabled"
+        foreach ($bookedTimes as $bookedTime) {
+            if (!in_array($bookedTime, $slots)) {
+                $ketersediaan[] = [
+                    'jam' => $bookedTime . ' (Acara Khusus)',
+                    'is_available' => false
+                ];
+            }
+        }
+
+        return $this->successResponse([
+            'tanggal' => $tanggal,
+            'slot_waktu' => $ketersediaan
+        ], 'Data ketersediaan jadwal berhasil diambil');
     }
 
     // Endpoint Terlindungi
@@ -69,7 +134,8 @@ class KunjunganController extends Controller
     {
         $noHp = $request->user()->no_hp;
         if (!$noHp) {
-            return $this->successResponse([], 'Nomor telepon (no_hp) pada profil Anda belum diisi, riwayat kunjungan tidak dapat dilacak.', 200);
+            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15, 1);
+            return $this->successResponse($emptyPaginator, 'Nomor telepon (no_hp) pada profil Anda belum diisi, riwayat kunjungan tidak dapat dilacak.', 200);
         }
         $data = \App\Models\Kunjungan::where('no_whatsapp', $noHp)->latest()->paginate(15);
         return $this->successResponse($data, 'Riwayat kunjungan berhasil diambil');

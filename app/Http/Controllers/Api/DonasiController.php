@@ -36,8 +36,24 @@ class DonasiController extends Controller
     {
         // Donatur bisa saja tamu yang tidak login, jadi id bersifat opsional
         $userId = $request->user('sanctum')?->id;
-        $data = $this->donasiService->createDonasi($request->validated(), $userId);
+        
+        $validatedData = $request->validated();
+        if (isset($validatedData['is_anonymous'])) {
+            $validatedData['is_anonymous'] = filter_var($validatedData['is_anonymous'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+        } else {
+            $validatedData['is_anonymous'] = 'false';
+        }
+
+        $data = $this->donasiService->createDonasi($validatedData, $userId);
         return $this->successResponse($data, 'Donasi berhasil dicatat', 201);
+    }
+
+    public function storeManual(DonasiRequest $request): JsonResponse
+    {
+        // Khusus untuk Admin yang menginput donasi tunai/cash
+        $userId = $request->user('sanctum')?->id;
+        $data = $this->donasiService->createDonasiManual($request->validated(), $userId);
+        return $this->successResponse($data, 'Donasi tunai berhasil dicatat dan diverifikasi', 201);
     }
 
     public function verify($id): JsonResponse

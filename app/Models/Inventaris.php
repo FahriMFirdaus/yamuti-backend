@@ -13,11 +13,21 @@ class Inventaris extends Model
 
     protected $fillable = [
         'nama_barang',
+        'kategori',
         'deskripsi',
         'stok_sekarang',
         'satuan',
+        'tanggal_kadaluarsa',
+        'lokasi_penyimpanan',
+        'stok_minimum',
         'created_by',
         'updated_by'
+    ];
+
+    protected $casts = [
+        'tanggal_kadaluarsa' => 'date',
+        'stok_sekarang' => 'integer',
+        'stok_minimum' => 'integer',
     ];
 
     public function mutasi()

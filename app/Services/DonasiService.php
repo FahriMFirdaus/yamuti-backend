@@ -48,6 +48,28 @@ class DonasiService extends BaseService
         return $donasi;
     }
 
+    public function createDonasiManual(array $data, ?string $userId = null): Donasi
+    {
+        $data['user_id'] = $userId;
+        $data['status'] = 'PENDING'; // Tetap pending atau langsung PAID? Tergantung. Jika Admin yang input, bisa langsung PAID. Kita buat langsung PAID saja.
+        $pt = strtoupper(trim($data['payment_type'] ?? ''));
+        $data['payment_type'] = !empty($pt) ? $pt : 'CASH'; // Bisa CASH atau MANUAL_TRANSFER
+        
+        $donasi = Donasi::create($data);
+        
+        // Karena langsung PAID, jalankan split rule
+        $donasi->update(['status' => 'PAID']);
+        $this->applySplitRule($donasi);
+        
+        // Kirim notifikasi WA
+        if ($donasi->no_whatsapp) {
+            $pesan = "Alhamdulillah, donasi Tunai Anda sebesar Rp" . number_format($donasi->gross_amount, 0, ',', '.') . " telah kami terima dengan baik. Jazakumullah khairan katsiran.";
+            SendWhatsAppMessage::dispatch($donasi->no_whatsapp, $pesan);
+        }
+
+        return $donasi;
+    }
+
     public function updateStatus(string $id, string $status): Donasi
     {
         return DB::transaction(function () use ($id, $status) {
@@ -74,25 +96,30 @@ class DonasiService extends BaseService
     protected function applySplitRule(Donasi $donasi): void
     {
         $nominal = $donasi->gross_amount;
-        $cabang = $nominal * 0.10; // 10% masuk ke Kas Cabang (Hak Amilin/Operasional)
-        $pusat = $nominal * 0.90; // 90% masuk ke Kas Pusat
+        $setting = \App\Models\Setting::where('key', 'donasi_split_rule')->first();
+        
+        $defaultRules = [
+            ['nama_kas' => 'Yayasan Tasikmalaya', 'persentase' => 75],
+            ['nama_kas' => 'Admin Sistem', 'persentase' => 10],
+            ['nama_kas' => 'IT Support', 'persentase' => 5],
+            ['nama_kas' => 'Operasional Website', 'persentase' => 10],
+        ];
 
-        // Mencatat Pemasukan Kas Pusat
-        TransaksiKeuangan::create([
-            'jenis_kas' => 'Pusat',
-            'tipe_transaksi' => 'Debit',
-            'nominal' => $pusat,
-            'deskripsi' => 'Alokasi 90% dari Donasi oleh ' . $donasi->nama_donatur,
-            'donasi_id' => $donasi->id,
-        ]);
+        $rules = $setting && is_array($setting->value) ? $setting->value : $defaultRules;
 
-        // Mencatat Pemasukan Kas Cabang
-        TransaksiKeuangan::create([
-            'jenis_kas' => 'Cabang',
-            'tipe_transaksi' => 'Debit',
-            'nominal' => $cabang,
-            'deskripsi' => 'Alokasi 10% dari Donasi oleh ' . $donasi->nama_donatur,
-            'donasi_id' => $donasi->id,
-        ]);
+        foreach ($rules as $rule) {
+            $persentase = floatval($rule['persentase']);
+            if ($persentase <= 0) continue;
+
+            $alokasi = $nominal * ($persentase / 100);
+
+            TransaksiKeuangan::create([
+                'jenis_kas' => $rule['nama_kas'] ?? 'Umum',
+                'tipe_transaksi' => 'Debit',
+                'nominal' => $alokasi,
+                'deskripsi' => 'Alokasi ' . $persentase . '% dari Donasi ' . $donasi->nama_donatur,
+                'donasi_id' => $donasi->id,
+            ]);
+        }
     }
 }

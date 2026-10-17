@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'nik', 'no_hp', 'skck', 'alamat', 'status_pegawai', 'foto_identitas'])]
+#[Fillable(['name', 'email', 'password', 'nik', 'no_hp', 'skck', 'alamat', 'status_pegawai', 'foto_identitas', 'google_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -24,7 +24,15 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $appends = ['role'];
+    protected $appends = ['role', 'has_password'];
+
+    /**
+     * Mengecek apakah user memiliki password
+     */
+    protected function getHasPasswordAttribute()
+    {
+        return !empty($this->password);
+    }
 
     /**
      * Mendapatkan role pertama yang dimiliki oleh User.
