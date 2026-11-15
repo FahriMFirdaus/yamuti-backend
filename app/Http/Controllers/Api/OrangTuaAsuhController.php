@@ -125,10 +125,56 @@ class OrangTuaAsuhController extends Controller
 
     /**
      * Endpoint bagi user/donatur terotentikasi untuk mendaftarkan komitmen POTA baru secara mandiri.
+     * Mendukung pendaftaran 1 anak maupun banyak anak (multi-select) sekaligus.
      */
     public function daftarMandiri(Request $request): JsonResponse
     {
         $user = $request->user();
+
+        // Cek apakah request berupa array 'items' (multi-anak) atau single
+        if ($request->has('items') && is_array($request->input('items'))) {
+            $validated = $request->validate([
+                'items' => 'required|array|min:1',
+                'items.*.anak_asuh_id' => 'required|exists:anak_asuhs,id',
+                'items.*.nominal_bulanan' => 'required|numeric|min:50000',
+                'items.*.hari_tagihan_per_bulan' => 'required|integer|min:1|max:31',
+                'items.*.catatan_doa' => 'nullable|string|max:500',
+            ]);
+
+            $created = [];
+            \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $user, &$created) {
+                foreach ($validated['items'] as $item) {
+                    $exists = OrangTuaAsuh::where('anak_asuh_id', $item['anak_asuh_id'])
+                        ->where('status', 'Aktif')
+                        ->where(function ($q) use ($user) {
+                            $q->where('user_id', $user->id);
+                            if (! empty($user->email)) {
+                                $q->orWhere('email', $user->email);
+                            }
+                        })
+                        ->exists();
+
+                    if (! $exists) {
+                        $pota = OrangTuaAsuh::create([
+                            'user_id' => $user->id,
+                            'nama_donatur' => $user->name,
+                            'no_hp' => $user->no_hp ?: '-',
+                            'email' => $user->email,
+                            'anak_asuh_id' => $item['anak_asuh_id'],
+                            'nominal_bulanan' => $item['nominal_bulanan'],
+                            'status' => 'Aktif',
+                            'tanggal_mulai' => now()->toDateString(),
+                            'hari_tagihan_per_bulan' => $item['hari_tagihan_per_bulan'],
+                            'catatan_doa' => $item['catatan_doa'] ?? null,
+                            'created_by' => $user->id,
+                        ]);
+                        $created[] = $pota;
+                    }
+                }
+            });
+
+            return $this->successResponse($created, 'Alhamdulillah! Komitmen Orang Tua Asuh untuk '.count($created).' ananda berhasil didaftarkan.', 201);
+        }
 
         $validated = $request->validate([
             'anak_asuh_id' => 'required|exists:anak_asuhs,id',
