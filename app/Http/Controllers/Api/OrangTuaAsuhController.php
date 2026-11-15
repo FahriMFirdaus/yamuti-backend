@@ -174,9 +174,9 @@ class OrangTuaAsuhController extends Controller
      */
     public function availableAnakAsuh(Request $request): JsonResponse
     {
-        // Ambil anak asuh aktif yang belum memiliki orang tua asuh aktif
+        // Ambil anak asuh aktif yang belum memiliki orang tua asuh aktif beserta bio & foto
         $data = \App\Models\AnakAsuh::where('status', 'Aktif')
-            ->select('id', 'nama', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'tingkat_pendidikan', 'nama_sekolah', 'foto_identitas')
+            ->select('id', 'nama', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'tingkat_pendidikan', 'nama_sekolah', 'foto_identitas', 'keterangan', 'status_keluarga')
             ->whereDoesntHave('orangTuaAsuh', function ($q) {
                 $q->where('status', 'Aktif');
             })
