@@ -29,6 +29,12 @@ class KunjunganController extends Controller
         $validatedData = $request->validated();
         $validatedData['is_full_day'] = (bool) $request->boolean('is_full_day');
 
+        // Jika request membawa token user atau terotentikasi sanctum, tautkan user_id
+        $user = $request->user('sanctum');
+        if ($user) {
+            $validatedData['user_id'] = $user->id;
+        }
+
         $data = $this->kunjunganService->requestKunjungan($validatedData);
 
         return $this->successResponse($data, 'Permintaan kunjungan berhasil diajukan, menunggu persetujuan admin', 201);
@@ -137,13 +143,19 @@ class KunjunganController extends Controller
 
     public function riwayat(Request $request): JsonResponse
     {
-        $noHp = $request->user()->no_hp;
-        if (! $noHp) {
-            $emptyPaginator = new LengthAwarePaginator([], 0, 15, 1);
+        $user = $request->user();
+        $userId = $user->id;
+        $noHp = $user->no_hp;
 
-            return $this->successResponse($emptyPaginator, 'Nomor telepon (no_hp) pada profil Anda belum diisi, riwayat kunjungan tidak dapat dilacak.', 200);
-        }
-        $data = Kunjungan::where('no_whatsapp', $noHp)->latest()->paginate(15);
+        // Cari berdasarkan user_id secara langsung, atau fallback ke no_whatsapp jika user_id belum terisi di masa lalu
+        $query = Kunjungan::where(function ($q) use ($userId, $noHp) {
+            $q->where('user_id', $userId);
+            if (! empty($noHp)) {
+                $q->orWhere('no_whatsapp', $noHp);
+            }
+        });
+
+        $data = $query->latest()->paginate(15);
 
         return $this->successResponse($data, 'Riwayat kunjungan berhasil diambil');
     }

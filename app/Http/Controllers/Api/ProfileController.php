@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppMessage;
+use App\Models\Setting;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -32,8 +34,14 @@ class ProfileController extends Controller
         ]);
 
         if ($request->hasFile('foto_identitas')) {
-            $path = $request->file('foto_identitas')->store('identitas/users', 's3');
-            $validated['foto_identitas'] = Storage::disk('s3')->url($path);
+            $hasS3 = ! empty(config('filesystems.disks.s3.bucket'));
+            if ($hasS3) {
+                $path = $request->file('foto_identitas')->store('identitas/users', 's3');
+                $validated['foto_identitas'] = Storage::disk('s3')->url($path);
+            } else {
+                $path = $request->file('foto_identitas')->store('identitas/users', 'public');
+                $validated['foto_identitas'] = asset(Storage::url($path));
+            }
         }
 
         $oldEmail = $user->email;
@@ -73,15 +81,25 @@ class ProfileController extends Controller
 
     public function kontakUtama(): JsonResponse
     {
-        // Cari pengguna dengan role super_admin, prioritaskan yang punya nomor HP
-        $admin = User::role('super_admin')->whereNotNull('no_hp')->first();
+        // 1. Prioritaskan nomor resmi dari tabel pengaturan yayasan
+        $setting = Setting::where('key', 'lokasi_dan_operasional')->first();
+        $settingData = $setting ? (is_array($setting->value) ? $setting->value : json_decode($setting->value, true)) : [];
+        $noWa = $settingData['no_whatsapp_admin'] ?? $settingData['no_whatsapp'] ?? $settingData['no_hp_resmi'] ?? null;
+        $namaAdmin = 'Layanan Resmi YAMUTI';
 
-        if (! $admin) {
-            $admin = User::role('super_admin')->first();
+        // 2. Jika tidak ada di setting, cari super_admin yang memiliki nomor HP
+        if (! $noWa) {
+            $admin = User::role('super_admin')->whereNotNull('no_hp')->first();
+            if ($admin && $admin->no_hp) {
+                $noWa = $admin->no_hp;
+                $namaAdmin = $admin->name;
+            }
         }
 
-        // Default fallback
-        $noWa = $admin && $admin->no_hp ? $admin->no_hp : '6281234567890';
+        // 3. Fallback default jika masih kosong
+        if (! $noWa) {
+            $noWa = '6287700312182';
+        }
 
         // Hapus karakter non-digit (seperti spasi, strip, atau plus)
         $noWa = preg_replace('/[^0-9]/', '', $noWa);
@@ -96,7 +114,7 @@ class ProfileController extends Controller
             'message' => 'Kontak utama berhasil diambil',
             'data' => [
                 'no_whatsapp' => $noWa,
-                'nama_admin' => $admin ? $admin->name : 'Admin YAMUTI',
+                'nama_admin' => $namaAdmin,
             ],
         ]);
     }

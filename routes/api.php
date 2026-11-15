@@ -174,9 +174,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
-    // Riwayat
+    // Riwayat & Program Donatur
     Route::get('/user/riwayat-donasi', [DonasiController::class, 'riwayat']);
     Route::get('/user/riwayat-kunjungan', [KunjunganController::class, 'riwayat']);
+    Route::get('/user/orang-tua-asuh', [OrangTuaAsuhController::class, 'saya']);
 
     // Keranjang Donasi
     Route::get('/keranjang/count', [KeranjangController::class, 'count']);

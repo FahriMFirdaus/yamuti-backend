@@ -99,4 +99,27 @@ class OrangTuaAsuhController extends Controller
 
         return $this->successResponse(null, 'Data komitmen orang tua asuh berhasil dihapus');
     }
+
+    /**
+     * Endpoint khusus bagi user/donatur terotentikasi untuk melihat data komitmen POTA miliknya sendiri.
+     */
+    public function saya(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $data = OrangTuaAsuh::with(['anakAsuh:id,nama,nik,jenis_kelamin,tingkat_pendidikan,nama_sekolah,status'])
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if (! empty($user->email)) {
+                    $q->orWhere('email', $user->email);
+                }
+                if (! empty($user->no_hp)) {
+                    $q->orWhere('no_hp', $user->no_hp);
+                }
+            })
+            ->latest()
+            ->get();
+
+        return $this->successResponse($data, 'Data anak asuh binaan berhasil diambil');
+    }
 }

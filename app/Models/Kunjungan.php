@@ -12,6 +12,7 @@ class Kunjungan extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
+        'user_id',
         'nama_tamu',
         'no_whatsapp',
         'jumlah_pengunjung',
@@ -22,6 +23,11 @@ class Kunjungan extends Model
         'branch_id',
         'approved_by',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     protected $casts = [
         'slot_waktu' => 'datetime',
