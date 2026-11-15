@@ -178,6 +178,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/riwayat-donasi', [DonasiController::class, 'riwayat']);
     Route::get('/user/riwayat-kunjungan', [KunjunganController::class, 'riwayat']);
     Route::get('/user/orang-tua-asuh', [OrangTuaAsuhController::class, 'saya']);
+    Route::get('/user/anak-asuh-tersedia', [OrangTuaAsuhController::class, 'availableAnakAsuh']);
+    Route::post('/user/orang-tua-asuh', [OrangTuaAsuhController::class, 'daftarMandiri']);
 
     // Keranjang Donasi
     Route::get('/keranjang/count', [KeranjangController::class, 'count']);

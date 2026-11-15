@@ -107,7 +107,7 @@ class OrangTuaAsuhController extends Controller
     {
         $user = $request->user();
 
-        $data = OrangTuaAsuh::with(['anakAsuh:id,nama,nik,jenis_kelamin,tingkat_pendidikan,nama_sekolah,status'])
+        $data = OrangTuaAsuh::with(['anakAsuh:id,nama,nik,jenis_kelamin,tingkat_pendidikan,nama_sekolah,status,foto_identitas'])
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id);
                 if (! empty($user->email)) {
@@ -121,5 +121,69 @@ class OrangTuaAsuhController extends Controller
             ->get();
 
         return $this->successResponse($data, 'Data anak asuh binaan berhasil diambil');
+    }
+
+    /**
+     * Endpoint bagi user/donatur terotentikasi untuk mendaftarkan komitmen POTA baru secara mandiri.
+     */
+    public function daftarMandiri(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'anak_asuh_id' => 'required|exists:anak_asuhs,id',
+            'nominal_bulanan' => 'required|numeric|min:50000',
+            'hari_tagihan_per_bulan' => 'required|integer|min:1|max:31',
+            'catatan_doa' => 'nullable|string|max:500',
+        ]);
+
+        // Cek apakah donatur ini sudah menjadi orang tua asuh untuk anak ini dan masih aktif
+        $exists = OrangTuaAsuh::where('anak_asuh_id', $validated['anak_asuh_id'])
+            ->where('status', 'Aktif')
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if (! empty($user->email)) {
+                    $q->orWhere('email', $user->email);
+                }
+            })
+            ->exists();
+
+        if ($exists) {
+            return $this->errorResponse('Anda sudah terdaftar sebagai Orang Tua Asuh aktif untuk ananda ini.', 422);
+        }
+
+        $pota = OrangTuaAsuh::create([
+            'user_id' => $user->id,
+            'nama_donatur' => $user->name,
+            'no_hp' => $user->no_hp ?: '-',
+            'email' => $user->email,
+            'anak_asuh_id' => $validated['anak_asuh_id'],
+            'nominal_bulanan' => $validated['nominal_bulanan'],
+            'status' => 'Aktif',
+            'tanggal_mulai' => now()->toDateString(),
+            'hari_tagihan_per_bulan' => $validated['hari_tagihan_per_bulan'],
+            'catatan_doa' => $validated['catatan_doa'] ?? null,
+            'created_by' => $user->id,
+        ]);
+
+        return $this->successResponse($pota->load('anakAsuh'), 'Alhamdulillah! Komitmen Orang Tua Asuh berhasil didaftarkan.', 201);
+    }
+
+    /**
+     * Endpoint untuk mengambil daftar anak asuh yang tersedia untuk dipilih oleh donatur.
+     */
+    public function availableAnakAsuh(Request $request): JsonResponse
+    {
+        // Ambil anak asuh aktif yang belum memiliki orang tua asuh aktif
+        $data = \App\Models\AnakAsuh::where('status', 'Aktif')
+            ->select('id', 'nama', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'tingkat_pendidikan', 'nama_sekolah', 'foto_identitas')
+            ->whereDoesntHave('orangTuaAsuh', function ($q) {
+                $q->where('status', 'Aktif');
+            })
+            ->latest()
+            ->take(30)
+            ->get();
+
+        return $this->successResponse($data, 'Daftar calon anak asuh binaan berhasil diambil');
     }
 }
