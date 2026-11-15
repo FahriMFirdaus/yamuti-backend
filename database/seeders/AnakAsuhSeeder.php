@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\AnakAsuh;
 use Illuminate\Database\Seeder;
 
 class AnakAsuhSeeder extends Seeder
@@ -12,6 +12,6 @@ class AnakAsuhSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\AnakAsuh::factory()->count(30)->create();
+        AnakAsuh::factory()->count(30)->create();
     }
 }

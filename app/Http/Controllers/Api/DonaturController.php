@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class DonaturController extends Controller
 {
@@ -27,6 +27,7 @@ class DonaturController extends Controller
     public function show($id): JsonResponse
     {
         $donatur = User::role('donatur')->with('donasis.kampanye')->findOrFail($id);
+
         return $this->successResponse($donatur, 'Detail donatur berhasil diambil');
     }
 }

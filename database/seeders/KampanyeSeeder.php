@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Kampanye;
+use App\Models\Keranjang;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class KampanyeSeeder extends Seeder
@@ -62,10 +64,10 @@ class KampanyeSeeder extends Seeder
             ],
         ];
 
-        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
-        \App\Models\Keranjang::truncate();
+        Schema::disableForeignKeyConstraints();
+        Keranjang::truncate();
         Kampanye::truncate();
-        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        Schema::enableForeignKeyConstraints();
 
         foreach ($programs as $prog) {
             Kampanye::create([

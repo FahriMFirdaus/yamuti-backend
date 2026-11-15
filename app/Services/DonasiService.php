@@ -2,33 +2,37 @@
 
 namespace App\Services;
 
-use App\Models\Donasi;
-use App\Models\TransaksiKeuangan;
 use App\Jobs\SendWhatsAppMessage;
-use Illuminate\Support\Facades\DB;
+use App\Models\Donasi;
+use App\Models\Setting;
+use App\Models\TransaksiKeuangan;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class DonasiService extends BaseService
 {
     public function getAllDonasi(int $perPage = 15): LengthAwarePaginator
     {
-        return Donasi::latest()->paginate($perPage);
+        return Donasi::with(['kampanye:id,judul,slug', 'user:id,name,email'])
+            ->latest()
+            ->paginate($perPage);
     }
 
     public function getDonasiById(string $id): Donasi
     {
-        return Donasi::findOrFail($id);
+        return Donasi::with(['kampanye:id,judul,slug,target_donasi,dana_terkumpul', 'user:id,name,email,no_hp'])
+            ->findOrFail($id);
     }
 
     public function createDonasi(array $data, ?string $userId = null): Donasi
     {
         $data['user_id'] = $userId;
         $data['status'] = 'PENDING';
-        
+
         $donasi = Donasi::create($data);
 
         // Integrasi Midtrans
-        $midtransService = new MidtransService();
+        $midtransService = new MidtransService;
         $midtransData = $midtransService->createTransaction([
             'transaction_details' => [
                 'order_id' => $donasi->id,
@@ -37,12 +41,12 @@ class DonasiService extends BaseService
             'customer_details' => [
                 'first_name' => $donasi->nama_donatur,
                 'phone' => $donasi->no_whatsapp,
-            ]
+            ],
         ]);
 
         $donasi->update([
             'snap_token' => $midtransData['snap_token'],
-            'payment_url' => $midtransData['payment_url']
+            'payment_url' => $midtransData['payment_url'],
         ]);
 
         return $donasi;
@@ -53,17 +57,17 @@ class DonasiService extends BaseService
         $data['user_id'] = $userId;
         $data['status'] = 'PENDING'; // Tetap pending atau langsung PAID? Tergantung. Jika Admin yang input, bisa langsung PAID. Kita buat langsung PAID saja.
         $pt = strtoupper(trim($data['payment_type'] ?? ''));
-        $data['payment_type'] = !empty($pt) ? $pt : 'CASH'; // Bisa CASH atau MANUAL_TRANSFER
-        
+        $data['payment_type'] = ! empty($pt) ? $pt : 'CASH'; // Bisa CASH atau MANUAL_TRANSFER
+
         $donasi = Donasi::create($data);
-        
+
         // Karena langsung PAID, jalankan split rule
         $donasi->update(['status' => 'PAID']);
         $this->applySplitRule($donasi);
-        
+
         // Kirim notifikasi WA
         if ($donasi->no_whatsapp) {
-            $pesan = "Alhamdulillah, donasi Tunai Anda sebesar Rp" . number_format($donasi->gross_amount, 0, ',', '.') . " telah kami terima dengan baik. Jazakumullah khairan katsiran.";
+            $pesan = 'Alhamdulillah, donasi Tunai Anda sebesar Rp'.number_format($donasi->gross_amount, 0, ',', '.').' telah kami terima dengan baik. Jazakumullah khairan katsiran.';
             SendWhatsAppMessage::dispatch($donasi->no_whatsapp, $pesan);
         }
 
@@ -74,15 +78,15 @@ class DonasiService extends BaseService
     {
         return DB::transaction(function () use ($id, $status) {
             $donasi = Donasi::lockForUpdate()->findOrFail($id);
-            
+
             // Logika Otomatis: Jika status berubah jadi PAID untuk pertama kali, jalankan Split Rule
             if ($donasi->status !== 'PAID' && $status === 'PAID') {
                 $donasi->update(['status' => 'PAID']);
                 $this->applySplitRule($donasi);
-                
+
                 // Kirim notifikasi WA
                 if ($donasi->no_whatsapp) {
-                    $pesan = "Alhamdulillah, donasi Anda sebesar Rp" . number_format($donasi->gross_amount, 0, ',', '.') . " telah kami terima. Jazakumullah khairan katsiran.";
+                    $pesan = 'Alhamdulillah, donasi Anda sebesar Rp'.number_format($donasi->gross_amount, 0, ',', '.').' telah kami terima. Jazakumullah khairan katsiran.';
                     SendWhatsAppMessage::dispatch($donasi->no_whatsapp, $pesan);
                 }
             } else {
@@ -96,8 +100,8 @@ class DonasiService extends BaseService
     protected function applySplitRule(Donasi $donasi): void
     {
         $nominal = $donasi->gross_amount;
-        $setting = \App\Models\Setting::where('key', 'donasi_split_rule')->first();
-        
+        $setting = Setting::where('key', 'donasi_split_rule')->first();
+
         $defaultRules = [
             ['nama_kas' => 'Yayasan Tasikmalaya', 'persentase' => 75],
             ['nama_kas' => 'Admin Sistem', 'persentase' => 10],
@@ -109,7 +113,9 @@ class DonasiService extends BaseService
 
         foreach ($rules as $rule) {
             $persentase = floatval($rule['persentase']);
-            if ($persentase <= 0) continue;
+            if ($persentase <= 0) {
+                continue;
+            }
 
             $alokasi = $nominal * ($persentase / 100);
 
@@ -117,7 +123,7 @@ class DonasiService extends BaseService
                 'jenis_kas' => $rule['nama_kas'] ?? 'Umum',
                 'tipe_transaksi' => 'Debit',
                 'nominal' => $alokasi,
-                'deskripsi' => 'Alokasi ' . $persentase . '% dari Donasi ' . $donasi->nama_donatur,
+                'deskripsi' => 'Alokasi '.$persentase.'% dari Donasi '.$donasi->nama_donatur,
                 'donasi_id' => $donasi->id,
             ]);
         }

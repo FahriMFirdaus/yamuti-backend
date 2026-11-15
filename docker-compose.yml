@@ -1,0 +1,55 @@
+name: yamuti-backend
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: yamuti_backend_app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
+    networks:
+      - shared_network
+
+  web:
+    image: nginx:alpine
+    container_name: yamuti_backend_web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8002}:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - shared_network
+    depends_on:
+      - app
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: yamuti_backend_worker
+    restart: unless-stopped
+    command: php artisan queue:work --tries=3 --timeout=90
+    volumes:
+      - .:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
+    networks:
+      - shared_network
+    depends_on:
+      - app
+
+networks:
+  shared_network:
+    name: shared_network
+    external: true
+

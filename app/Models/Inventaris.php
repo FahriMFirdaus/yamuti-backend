@@ -21,7 +21,7 @@ class Inventaris extends Model
         'lokasi_penyimpanan',
         'stok_minimum',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     protected $casts = [

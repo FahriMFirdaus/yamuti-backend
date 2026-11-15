@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\StorageHelper;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,8 +16,15 @@ class Galeri extends Model
         'judul',
         'deskripsi',
         'file_url',
-        'diunggah_oleh'
+        'diunggah_oleh',
     ];
+
+    protected $appends = ['foto_url'];
+
+    public function getFotoUrlAttribute(): ?string
+    {
+        return $this->file_url;
+    }
 
     public function pengunggah()
     {
@@ -26,9 +34,10 @@ class Galeri extends Model
     public function toArray()
     {
         $array = parent::toArray();
-        if (!empty($array['file_url']) && !str_starts_with($array['file_url'], 'http')) {
-            $array['file_url'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['file_url']);
+        if (! empty($array['file_url'])) {
+            $array['file_url'] = StorageHelper::getUrl($array['file_url']);
         }
+
         return $array;
     }
 }

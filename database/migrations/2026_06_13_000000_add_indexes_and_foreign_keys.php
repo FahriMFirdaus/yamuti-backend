@@ -16,21 +16,21 @@ return new class extends Migration
             $table->index('donasi_id');
             $table->index('jenis_kas');
             $table->index('tipe_transaksi');
-            
+
             $table->foreign('donasi_id')
-                  ->references('id')
-                  ->on('donasis')
-                  ->onDelete('set null');
+                ->references('id')
+                ->on('donasis')
+                ->onDelete('set null');
         });
 
         // 2. Tabel mutasi_barangs
         Schema::table('mutasi_barangs', function (Blueprint $table) {
             $table->index('transaksi_keuangan_id');
-            
+
             $table->foreign('transaksi_keuangan_id')
-                  ->references('id')
-                  ->on('transaksi_keuangans')
-                  ->onDelete('set null');
+                ->references('id')
+                ->on('transaksi_keuangans')
+                ->onDelete('set null');
         });
 
         // 3. Tabel donasis

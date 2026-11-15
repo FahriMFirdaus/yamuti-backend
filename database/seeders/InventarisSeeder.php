@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Inventaris;
 use Illuminate\Database\Seeder;
 
 class InventarisSeeder extends Seeder
@@ -12,6 +12,6 @@ class InventarisSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Inventaris::factory()->count(15)->create();
+        Inventaris::factory()->count(15)->create();
     }
 }

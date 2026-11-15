@@ -14,6 +14,13 @@ class InventarisService extends BaseService
         return Inventaris::latest()->paginate($perPage);
     }
 
+    public function getKebutuhanMendesak()
+    {
+        return Inventaris::whereColumn('stok_sekarang', '<=', 'stok_minimum')
+            ->orderBy('stok_sekarang', 'asc')
+            ->get();
+    }
+
     public function getInventarisById(string $id): Inventaris
     {
         return Inventaris::findOrFail($id);
@@ -22,9 +29,10 @@ class InventarisService extends BaseService
     public function createInventaris(array $data, string $userId): Inventaris
     {
         $data['created_by'] = $userId;
+
         return DB::transaction(function () use ($data, $userId) {
             $inventaris = Inventaris::create($data);
-            
+
             if ($data['stok_sekarang'] > 0) {
                 MutasiBarang::create([
                     'inventaris_id' => $inventaris->id,
@@ -35,7 +43,7 @@ class InventarisService extends BaseService
                     'created_by' => $userId,
                 ]);
             }
-            
+
             return $inventaris;
         });
     }
@@ -45,12 +53,14 @@ class InventarisService extends BaseService
         $inventaris = Inventaris::findOrFail($id);
         $data['updated_by'] = $userId;
         $inventaris->update($data);
+
         return $inventaris;
     }
 
     public function deleteInventaris(string $id): bool
     {
         $inventaris = Inventaris::findOrFail($id);
+
         return $inventaris->delete();
     }
 }

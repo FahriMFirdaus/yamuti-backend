@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
-use App\Models\KategoriArtikel;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class KategoriArtikelTest extends TestCase
 {
@@ -24,7 +23,7 @@ class KategoriArtikelTest extends TestCase
         $admin->assignRole('admin');
 
         $response = $this->actingAs($admin, 'sanctum')->postJson('/api/kategori-artikel', [
-            'nama_kategori' => 'Pendidikan'
+            'nama_kategori' => 'Pendidikan',
         ]);
 
         $response->assertStatus(201);

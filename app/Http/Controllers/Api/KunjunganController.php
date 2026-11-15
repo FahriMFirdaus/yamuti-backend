@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\KunjunganRequest;
+use App\Models\Kunjungan;
+use App\Models\Setting;
 use App\Services\KunjunganService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class KunjunganController extends Controller
 {
@@ -24,36 +27,33 @@ class KunjunganController extends Controller
     public function store(KunjunganRequest $request): JsonResponse
     {
         $validatedData = $request->validated();
-        if (isset($validatedData['is_full_day'])) {
-            $validatedData['is_full_day'] = filter_var($validatedData['is_full_day'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
-        } else {
-            $validatedData['is_full_day'] = 'false';
-        }
-        
+        $validatedData['is_full_day'] = (bool) $request->boolean('is_full_day');
+
         $data = $this->kunjunganService->requestKunjungan($validatedData);
+
         return $this->successResponse($data, 'Permintaan kunjungan berhasil diajukan, menunggu persetujuan admin', 201);
     }
 
     public function ketersediaan(Request $request): JsonResponse
     {
         $tanggal = $request->query('tanggal');
-        if (!$tanggal) {
+        if (! $tanggal) {
             return $this->errorResponse('Parameter tanggal wajib diisi (Format: YYYY-MM-DD)', 400);
         }
 
         // Ambil jam operasional dari settings, atau gunakan default
-        $setting = \App\Models\Setting::where('key', 'jam_operasional_kunjungan')->first();
-        $defaultSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00"];
+        $setting = Setting::where('key', 'jam_operasional_kunjungan')->first();
+        $defaultSlots = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'];
         $slots = $setting ? $setting->value : $defaultSlots;
 
         // Ambil kunjungan yang sudah dibooking pada tanggal tersebut (hindari status REJECTED atau DIBATALKAN)
-        $bookedKunjungan = \App\Models\Kunjungan::whereDate('slot_waktu', $tanggal)
+        $bookedKunjungan = Kunjungan::whereDate('slot_waktu', $tanggal)
             ->whereNotIn('status', ['REJECTED', 'DIBATALKAN'])
             ->get();
 
         // Cek apakah ada booking FULL DAY
         $hasFullDayBooking = $bookedKunjungan->contains('is_full_day', true);
-        
+
         // Ekstrak jam yang sudah dibooking parsial (H:i)
         $bookedTimes = $bookedKunjungan->where('is_full_day', false)->map(function ($k) {
             return $k->slot_waktu->format('H:i');
@@ -61,54 +61,56 @@ class KunjunganController extends Controller
 
         // Bentuk response
         $ketersediaan = [];
-        
+
         // Slot khusus Full Day
         $ketersediaan[] = [
             'jam' => 'FULL DAY',
-            'is_available' => !$hasFullDayBooking && count($bookedTimes) === 0
+            'is_available' => ! $hasFullDayBooking && count($bookedTimes) === 0,
         ];
 
         // Slot per jam
         foreach ($slots as $slot) {
             $ketersediaan[] = [
                 'jam' => $slot,
-                'is_available' => !$hasFullDayBooking && !in_array($slot, $bookedTimes)
+                'is_available' => ! $hasFullDayBooking && ! in_array($slot, $bookedTimes),
             ];
         }
 
         // Tambahkan jam khusus (custom) yang sudah dibooking agar muncul di UI sebagai "Penuh/Disabled"
         foreach ($bookedTimes as $bookedTime) {
-            if (!in_array($bookedTime, $slots)) {
+            if (! in_array($bookedTime, $slots)) {
                 $ketersediaan[] = [
-                    'jam' => $bookedTime . ' (Acara Khusus)',
-                    'is_available' => false
+                    'jam' => $bookedTime.' (Acara Khusus)',
+                    'is_available' => false,
                 ];
             }
         }
 
         return $this->successResponse([
             'tanggal' => $tanggal,
-            'slot_waktu' => $ketersediaan
+            'slot_waktu' => $ketersediaan,
         ], 'Data ketersediaan jadwal berhasil diambil');
     }
 
     // Endpoint Terlindungi
     public function index(Request $request): JsonResponse
     {
-        $data = $this->kunjunganService->getAllKunjungan((int)$request->query('per_page', 15));
+        $data = $this->kunjunganService->getAllKunjungan((int) $request->query('per_page', 15));
+
         return $this->successResponse($data, 'Data kunjungan berhasil diambil');
     }
 
     public function show($id): JsonResponse
     {
         $data = $this->kunjunganService->getKunjunganById($id);
+
         return $this->successResponse($data, 'Detail kunjungan berhasil diambil');
     }
 
     public function updateStatus(Request $request, $id): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'required|string|in:APPROVED,REJECTED,COMPLETED'
+            'status' => 'required|string|in:APPROVED,REJECTED,COMPLETED',
         ]);
 
         $status = strtoupper($validated['status']);
@@ -116,16 +118,19 @@ class KunjunganController extends Controller
 
         if ($status === 'APPROVED') {
             $data = $this->kunjunganService->approveKunjungan($id, $adminId);
+
             return $this->successResponse($data, 'Kunjungan disetujui');
         } elseif ($status === 'REJECTED') {
             $data = $this->kunjunganService->rejectKunjungan($id, $adminId);
+
             return $this->successResponse($data, 'Kunjungan ditolak');
         } else {
             // Jika ada status COMPLETED dll, bisa diarahkan ke update standar
             // Untuk sementara kita panggil fungsi approve/reject, atau update model langsung jika ada fungsi di service
             // Untuk COMPLETED kita harus update manual jika belum ada di service:
-            $kunjungan = \App\Models\Kunjungan::findOrFail($id);
+            $kunjungan = Kunjungan::findOrFail($id);
             $kunjungan->update(['status' => $status]);
+
             return $this->successResponse($kunjungan, "Kunjungan diperbarui menjadi $status");
         }
     }
@@ -133,11 +138,13 @@ class KunjunganController extends Controller
     public function riwayat(Request $request): JsonResponse
     {
         $noHp = $request->user()->no_hp;
-        if (!$noHp) {
-            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15, 1);
+        if (! $noHp) {
+            $emptyPaginator = new LengthAwarePaginator([], 0, 15, 1);
+
             return $this->successResponse($emptyPaginator, 'Nomor telepon (no_hp) pada profil Anda belum diisi, riwayat kunjungan tidak dapat dilacak.', 200);
         }
-        $data = \App\Models\Kunjungan::where('no_whatsapp', $noHp)->latest()->paginate(15);
+        $data = Kunjungan::where('no_whatsapp', $noHp)->latest()->paginate(15);
+
         return $this->successResponse($data, 'Riwayat kunjungan berhasil diambil');
     }
 }

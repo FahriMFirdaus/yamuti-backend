@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
@@ -36,14 +37,14 @@ class AdminController extends Controller
             'alamat' => 'nullable|string',
             'status_pegawai' => 'nullable|string|max:50',
             'role' => 'required|string|exists:roles,name',
-            'foto_identitas' => 'nullable|image|max:5120'
+            'foto_identitas' => 'nullable|image|max:5120',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        
+
         if ($request->hasFile('foto_identitas')) {
             $path = $request->file('foto_identitas')->store('identitas/users', 's3');
-            $validated['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+            $validated['foto_identitas'] = Storage::disk('s3')->url($path);
         }
 
         $admin = User::create($validated);
@@ -55,6 +56,7 @@ class AdminController extends Controller
     public function show($id): JsonResponse
     {
         $admin = User::with('roles')->findOrFail($id);
+
         return $this->successResponse($admin, 'Detail admin berhasil diambil');
     }
 
@@ -78,7 +80,7 @@ class AdminController extends Controller
             'alamat' => 'nullable|string',
             'status_pegawai' => 'nullable|string|max:50',
             'role' => 'sometimes|string|exists:roles,name',
-            'foto_identitas' => 'nullable|image|max:5120'
+            'foto_identitas' => 'nullable|image|max:5120',
         ]);
 
         if (isset($validated['password'])) {
@@ -87,7 +89,7 @@ class AdminController extends Controller
 
         if ($request->hasFile('foto_identitas')) {
             $path = $request->file('foto_identitas')->store('identitas/users', 's3');
-            $validated['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+            $validated['foto_identitas'] = Storage::disk('s3')->url($path);
         }
 
         $admin->update($validated);

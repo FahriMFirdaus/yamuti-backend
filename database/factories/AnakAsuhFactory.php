@@ -12,6 +12,7 @@ class AnakAsuhFactory extends Factory
     public function definition(): array
     {
         $jenisKelamin = fake()->randomElement(['Laki-laki', 'Perempuan']);
+
         return [
             'id' => fake()->uuid(),
             'nama' => fake()->name($jenisKelamin === 'Laki-laki' ? 'male' : 'female'),
@@ -28,7 +29,7 @@ class AnakAsuhFactory extends Factory
             'keterangan' => fake()->sentence(),
             'status_keluarga' => fake()->randomElement(['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa']),
             'tingkat_pendidikan' => fake()->randomElement(['Belum Sekolah', 'TK/PAUD', 'SD', 'SMP', 'SMA/SMK', 'Kuliah']),
-            'nama_sekolah' => fake()->company() . ' School',
+            'nama_sekolah' => fake()->company().' School',
             'golongan_darah' => fake()->randomElement(['A', 'B', 'AB', 'O', 'Belum Tahu']),
             'riwayat_penyakit' => fake()->boolean(10) ? fake()->randomElement(['Asma', 'Alergi Dingin', 'Maag']) : null,
             'catatan_khusus' => fake()->boolean(20) ? fake()->sentence() : null,

@@ -18,7 +18,9 @@ return [
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
-    'allowed_origins' => array_map(function($url) { return rtrim(trim($url), '/'); }, explode(',', env('ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:5173'))),
+    'allowed_origins' => array_map(function ($url) {
+        return rtrim(trim($url), '/');
+    }, explode(',', env('ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:5173'))),
 
     'allowed_origins_patterns' => [],
 

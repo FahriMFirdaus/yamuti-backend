@@ -4,26 +4,29 @@ namespace App\Services;
 
 use App\Models\AnakAsuh;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 class AnakAsuhService extends BaseService
 {
     public function getAllAnakAsuh(int $perPage = 15): LengthAwarePaginator
     {
-        return AnakAsuh::latest()->paginate($perPage);
+        return AnakAsuh::with(['orangTuaAsuh', 'records'])
+            ->latest()
+            ->paginate($perPage);
     }
 
     public function getAnakAsuhById(string $id): AnakAsuh
     {
-        return AnakAsuh::findOrFail($id);
+        return AnakAsuh::with('records')->findOrFail($id);
     }
 
     public function createAnakAsuh(array $data, string $userId): AnakAsuh
     {
         $data['created_by'] = $userId;
-        
+
         if (isset($data['foto_identitas'])) {
             $path = $data['foto_identitas']->store('identitas/anak_asuh', 's3');
-            $data['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+            $data['foto_identitas'] = Storage::disk('s3')->url($path);
         }
 
         return AnakAsuh::create($data);
@@ -36,16 +39,18 @@ class AnakAsuhService extends BaseService
 
         if (isset($data['foto_identitas'])) {
             $path = $data['foto_identitas']->store('identitas/anak_asuh', 's3');
-            $data['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+            $data['foto_identitas'] = Storage::disk('s3')->url($path);
         }
 
         $anak->update($data);
+
         return $anak;
     }
 
     public function deleteAnakAsuh(string $id): bool
     {
         $anak = AnakAsuh::findOrFail($id);
+
         return $anak->delete();
     }
 }

@@ -8,8 +8,8 @@ use App\Models\Kampanye;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class KampanyeController extends Controller
 {
@@ -22,7 +22,7 @@ class KampanyeController extends Controller
 
         // Penyaringan Publik: Sembunyikan 'Draft' dan 'Dibatalkan' jika bukan user terautentikasi (Admin)
         $user = $request->user('sanctum');
-        if (!$user) {
+        if (! $user) {
             $query->whereNotIn('status', ['Draft', 'draft', 'Dibatalkan', 'dibatalkan']);
         }
 
@@ -42,7 +42,7 @@ class KampanyeController extends Controller
     public function store(KampanyeRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $validated['slug'] = Str::slug($validated['judul']) . '-' . time();
+        $validated['slug'] = Str::slug($validated['judul']).'-'.time();
 
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('kampanye', 's3');
@@ -56,10 +56,12 @@ class KampanyeController extends Controller
 
     public function show($id): JsonResponse
     {
-        // Ambil kampanye berdasarkan ID atau Slug
+        // Ambil kampanye berdasarkan ID atau Slug beserta update penyalurannya
         $kampanye = Kampanye::withSum(['donasi' => function ($q) {
             $q->where('status', 'PAID');
-        }], 'gross_amount')->where('id', $id)->orWhere('slug', $id)->firstOrFail();
+        }], 'gross_amount')
+            ->with('updates')
+            ->where('id', $id)->orWhere('slug', $id)->firstOrFail();
 
         return $this->successResponse($kampanye, 'Detail kampanye berhasil diambil');
     }
@@ -70,7 +72,7 @@ class KampanyeController extends Controller
         $validated = $request->validated();
 
         if ($request->has('judul') && $request->judul !== $kampanye->judul) {
-            $validated['slug'] = Str::slug($validated['judul']) . '-' . time();
+            $validated['slug'] = Str::slug($validated['judul']).'-'.time();
         }
 
         if ($request->hasFile('thumbnail')) {

@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
@@ -19,12 +17,12 @@ class AuthTest extends TestCase
             'email' => 'test@yamuti.org',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'no_hp' => '08123456789'
+            'no_hp' => '08123456789',
         ]);
 
         $response->assertStatus(201)
-                 ->assertJsonStructure(['success', 'message', 'data' => ['user', 'token']]);
-        
+            ->assertJsonStructure(['success', 'message', 'data' => ['user', 'token']]);
+
         $this->assertDatabaseHas('users', ['email' => 'test@yamuti.org']);
     }
 
@@ -41,6 +39,6 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-                 ->assertJsonStructure(['success', 'message', 'data' => ['user', 'token']]);
+            ->assertJsonStructure(['success', 'message', 'data' => ['user', 'token']]);
     }
 }

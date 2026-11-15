@@ -23,31 +23,43 @@ class InventarisController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->query('per_page', 15);
-        $data = $this->inventarisService->getAllInventaris((int)$perPage);
+        $data = $this->inventarisService->getAllInventaris((int) $perPage);
+
         return $this->successResponse($data, 'Data inventaris berhasil diambil');
+    }
+
+    public function mendesak(): JsonResponse
+    {
+        $data = $this->inventarisService->getKebutuhanMendesak();
+
+        return $this->successResponse($data, 'Daftar kebutuhan logistik mendesak berhasil diambil');
     }
 
     public function show($id): JsonResponse
     {
         $data = $this->inventarisService->getInventarisById($id);
+
         return $this->successResponse($data, 'Detail inventaris berhasil diambil');
     }
 
     public function store(InventarisRequest $request): JsonResponse
     {
         $data = $this->inventarisService->createInventaris($request->validated(), $request->user()->id);
+
         return $this->successResponse($data, 'Inventaris berhasil ditambahkan', 201);
     }
 
     public function update(InventarisRequest $request, $id): JsonResponse
     {
         $data = $this->inventarisService->updateInventaris($id, $request->validated(), $request->user()->id);
+
         return $this->successResponse($data, 'Inventaris berhasil diperbarui');
     }
 
     public function destroy($id): JsonResponse
     {
         $this->inventarisService->deleteInventaris($id);
+
         return $this->successResponse(null, 'Inventaris berhasil dihapus');
     }
 }

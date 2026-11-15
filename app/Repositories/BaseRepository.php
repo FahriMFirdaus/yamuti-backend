@@ -33,8 +33,10 @@ abstract class BaseRepository
         $record = $this->model->find($id);
         if ($record) {
             $record->update($data);
+
             return $record;
         }
+
         return null;
     }
 

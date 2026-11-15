@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\MutasiBarangRequest;
 use App\Services\MutasiBarangService;
 use App\Traits\ApiResponse;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Exception;
 
 class MutasiBarangController extends Controller
 {
@@ -24,7 +24,8 @@ class MutasiBarangController extends Controller
     public function index(Request $request, $inventarisId): JsonResponse
     {
         $perPage = $request->query('per_page', 15);
-        $data = $this->mutasiService->getRiwayatMutasi($inventarisId, (int)$perPage);
+        $data = $this->mutasiService->getRiwayatMutasi($inventarisId, (int) $perPage);
+
         return $this->successResponse($data, 'Riwayat mutasi barang berhasil diambil');
     }
 
@@ -32,6 +33,7 @@ class MutasiBarangController extends Controller
     {
         try {
             $data = $this->mutasiService->createMutasi($inventarisId, $request->validated(), $request->user()->id);
+
             return $this->successResponse($data, 'Mutasi barang berhasil dicatat', 201);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), 400);

@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Laravel\Socialite\Facades\Socialite;
-use App\Traits\ApiResponse;
 
 class SocialiteController extends Controller
 {
@@ -39,20 +39,22 @@ class SocialiteController extends Controller
                 ]
             );
 
-            if ($user->wasRecentlyCreated && !$user->hasRole('donatur')) {
+            if ($user->wasRecentlyCreated && ! $user->hasRole('donatur')) {
                 $user->assignRole('donatur');
             }
 
             $user->tokens()->delete();
 
             $token = $user->createToken('auth_token')->plainTextToken;
-            
+
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-            return redirect()->away($frontendUrl . '/auth/callback?token=' . $token);
+
+            return redirect()->away($frontendUrl.'/auth/callback?token='.$token);
 
         } catch (\Exception $e) {
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-            return redirect()->away($frontendUrl . '/auth/login?error=google_auth_failed');
+
+            return redirect()->away($frontendUrl.'/auth/login?error=google_auth_failed');
         }
     }
 }

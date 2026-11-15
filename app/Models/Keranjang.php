@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Keranjang extends Model
 {
@@ -17,7 +17,7 @@ class Keranjang extends Model
         'pesan',
         'is_anonymous',
         'nama_donatur',
-        'no_whatsapp'
+        'no_whatsapp',
     ];
 
     protected $casts = [

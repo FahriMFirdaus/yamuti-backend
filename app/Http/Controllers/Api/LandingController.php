@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AnakAsuh;
 use App\Models\Donasi;
-use App\Models\Kampanye;
 use App\Models\Galeri;
+use App\Models\Kampanye;
 use Illuminate\Http\JsonResponse;
 
 class LandingController extends Controller
@@ -28,11 +28,11 @@ class LandingController extends Controller
         $formattedDana = $this->formatRupiah($danaTersalurkan);
 
         return response()->json([
-            "jiwaterbantu" => $jiwaTerbantu > 0 ? $jiwaTerbantu . "+" : "30+",
-            "danatersalurkan" => $danaTersalurkan > 0 ? $formattedDana : "Rp 0",
-            "programberjalan" => $programBerjalan > 0 ? $programBerjalan . "+" : "5+",
-            "total_donatur" => $totalDonatur > 0 ? $totalDonatur : 15,
-            "pengabdian" => "12 Tahun"
+            'jiwaterbantu' => $jiwaTerbantu > 0 ? $jiwaTerbantu.'+' : '30+',
+            'danatersalurkan' => $danaTersalurkan > 0 ? $formattedDana : 'Rp 0',
+            'programberjalan' => $programBerjalan > 0 ? $programBerjalan.'+' : '5+',
+            'total_donatur' => $totalDonatur > 0 ? $totalDonatur : 15,
+            'pengabdian' => '12 Tahun',
         ]);
     }
 
@@ -42,11 +42,12 @@ class LandingController extends Controller
     private function formatRupiah($angka)
     {
         if ($angka >= 1000000000) {
-            return 'Rp ' . round($angka / 1000000000, 1) . ' Miliar';
+            return 'Rp '.round($angka / 1000000000, 1).' Miliar';
         } elseif ($angka >= 1000000) {
-            return 'Rp ' . round($angka / 1000000, 1) . ' Juta';
+            return 'Rp '.round($angka / 1000000, 1).' Juta';
         }
-        return 'Rp ' . number_format($angka, 0, ',', '.');
+
+        return 'Rp '.number_format($angka, 0, ',', '.');
     }
 
     /**
@@ -55,30 +56,30 @@ class LandingController extends Controller
     public function benefits(): JsonResponse
     {
         return response()->json([
-            [ 
-                "id" => "1", 
-                "title" => "Transparansi", 
-                "description" => "Laporan keuangan dan program yang transparan", 
-                "iconName" => "ShieldCheck" 
+            [
+                'id' => '1',
+                'title' => 'Transparansi',
+                'description' => 'Laporan keuangan dan program yang transparan',
+                'iconName' => 'ShieldCheck',
             ],
-            [ 
-                "id" => "2", 
-                "title" => "Aksesibilitas", 
-                "description" => "Kemudahan akses program dan donasi", 
-                "iconName" => "CheckCircle2" 
+            [
+                'id' => '2',
+                'title' => 'Aksesibilitas',
+                'description' => 'Kemudahan akses program dan donasi',
+                'iconName' => 'CheckCircle2',
             ],
-            [ 
-                "id" => "3", 
-                "title" => "Komunitas", 
-                "description" => "Jaringan donatur dan relawan yang solid", 
-                "iconName" => "Users" 
+            [
+                'id' => '3',
+                'title' => 'Komunitas',
+                'description' => 'Jaringan donatur dan relawan yang solid',
+                'iconName' => 'Users',
             ],
-            [ 
-                "id" => "4", 
-                "title" => "Dampak Nyata", 
-                "description" => "Program terukur untuk penerima manfaat", 
-                "iconName" => "Heart" 
-            ]
+            [
+                'id' => '4',
+                'title' => 'Dampak Nyata',
+                'description' => 'Program terukur untuk penerima manfaat',
+                'iconName' => 'Heart',
+            ],
         ]);
     }
 
@@ -89,12 +90,12 @@ class LandingController extends Controller
     {
         // Ambil 3 gambar galeri terbaru untuk dijadikan slider landing page
         $galeris = Galeri::latest()->take(3)->get();
-        
+
         $slides = $galeris->map(function ($galeri, $index) {
             return [
-                "id" => (string)($index + 1),
-                "src" => $galeri->foto_url,
-                "alt" => $galeri->judul ?? "Kegiatan YAMUTI"
+                'id' => (string) ($index + 1),
+                'src' => $galeri->file_url,
+                'alt' => $galeri->judul ?? 'Kegiatan YAMUTI',
             ];
         });
 
@@ -102,15 +103,15 @@ class LandingController extends Controller
         if ($slides->isEmpty()) {
             $slides = [
                 [
-                    "id" => "1",
-                    "src" => "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070&auto=format&fit=crop",
-                    "alt" => "Bantu Mereka Tersenyum"
+                    'id' => '1',
+                    'src' => 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070&auto=format&fit=crop',
+                    'alt' => 'Bantu Mereka Tersenyum',
                 ],
                 [
-                    "id" => "2",
-                    "src" => "https://images.unsplash.com/photo-1593113563332-e147ce10094b?q=80&w=2070&auto=format&fit=crop",
-                    "alt" => "Kegiatan Belajar"
-                ]
+                    'id' => '2',
+                    'src' => 'https://images.unsplash.com/photo-1593113563332-e147ce10094b?q=80&w=2070&auto=format&fit=crop',
+                    'alt' => 'Kegiatan Belajar',
+                ],
             ];
         }
 
@@ -142,11 +143,11 @@ class LandingController extends Controller
                 if (count($parts) > 1) {
                     $first = $parts[0];
                     $second = $parts[1];
-                    $firstMasked = mb_substr($first, 0, 1) . '***';
-                    $secondInitial = mb_substr($second, 0, 1) . '.';
-                    $namaTampil = $firstMasked . ' ' . $secondInitial;
+                    $firstMasked = mb_substr($first, 0, 1).'***';
+                    $secondInitial = mb_substr($second, 0, 1).'.';
+                    $namaTampil = $firstMasked.' '.$secondInitial;
                 } else {
-                    $namaTampil = mb_substr($namaAsli, 0, 1) . '***';
+                    $namaTampil = mb_substr($namaAsli, 0, 1).'***';
                 }
                 $roleTampil = 'Orang Baik';
             }

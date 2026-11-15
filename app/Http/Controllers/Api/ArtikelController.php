@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PublishToMetaGraph;
 use App\Models\Artikel;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use App\Jobs\PublishToMetaGraph;
+use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 
 class ArtikelController extends Controller
 {
@@ -18,6 +19,7 @@ class ArtikelController extends Controller
     {
         $perPage = $request->query('per_page', 15);
         $artikels = Artikel::with(['penulis:id,name', 'kategoriArtikel:id,nama_kategori,slug'])->latest()->paginate($perPage);
+
         return $this->successResponse($artikels, 'Data artikel berhasil diambil');
     }
 
@@ -27,7 +29,7 @@ class ArtikelController extends Controller
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
             'kategori_id' => 'nullable|uuid|exists:kategori_artikels,id',
-            'thumbnail' => 'nullable|image|max:2048'
+            'thumbnail' => 'nullable|image|max:2048',
         ]);
 
         $thumbnailUrl = null;
@@ -45,8 +47,8 @@ class ArtikelController extends Controller
 
         $artikel = Artikel::create([
             'judul' => $validated['judul'],
-            'slug' => Str::slug($validated['judul']) . '-' . uniqid(),
-            'konten' => $validated['konten'],
+            'slug' => Str::slug($validated['judul']).'-'.uniqid(),
+            'konten' => Purifier::clean($validated['konten']),
             'kategori_id' => $kategoriId,
             'thumbnail_url' => $thumbnailUrl,
             'penulis_id' => $request->user()->id,
@@ -64,7 +66,7 @@ class ArtikelController extends Controller
             ->where('id', $id)
             ->orWhere('slug', $id)
             ->firstOrFail();
-            
+
         return $this->successResponse($artikel, 'Detail artikel');
     }
 
@@ -76,7 +78,7 @@ class ArtikelController extends Controller
             'judul' => 'sometimes|required|string|max:255',
             'konten' => 'sometimes|required|string',
             'kategori_id' => 'nullable|uuid|exists:kategori_artikels,id',
-            'thumbnail' => 'nullable|image|max:2048'
+            'thumbnail' => 'nullable|image|max:2048',
         ]);
 
         if (array_key_exists('kategori_id', $validated)) {
@@ -86,7 +88,7 @@ class ArtikelController extends Controller
         }
 
         if (isset($validated['judul'])) {
-            $validated['slug'] = Str::slug($validated['judul']) . '-' . uniqid();
+            $validated['slug'] = Str::slug($validated['judul']).'-'.uniqid();
         }
 
         if ($request->hasFile('thumbnail')) {
@@ -94,6 +96,10 @@ class ArtikelController extends Controller
             $path = $request->file('thumbnail')->store('artikels', 's3');
             $validated['thumbnail_url'] = Storage::disk('s3')->url($path);
             unset($validated['thumbnail']);
+        }
+
+        if (isset($validated['konten'])) {
+            $validated['konten'] = Purifier::clean($validated['konten']);
         }
 
         $artikel->update($validated);
@@ -108,7 +114,7 @@ class ArtikelController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $hasS3 = !empty(config('filesystems.disks.s3.bucket'));
+            $hasS3 = ! empty(config('filesystems.disks.s3.bucket'));
             if ($hasS3) {
                 $path = $request->file('image')->store('artikels/content', 's3');
                 $url = Storage::disk('s3')->url($path);
@@ -127,6 +133,7 @@ class ArtikelController extends Controller
     {
         $artikel = Artikel::findOrFail($id);
         $artikel->delete();
+
         return $this->successResponse(null, 'Artikel berhasil dihapus');
     }
 }

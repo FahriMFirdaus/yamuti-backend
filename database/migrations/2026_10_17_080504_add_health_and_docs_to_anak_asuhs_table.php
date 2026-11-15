@@ -16,7 +16,7 @@ return new class extends Migration
             $table->boolean('has_akta_fisik')->default(false)->after('no_bpjs');
             $table->boolean('has_kk_fisik')->default(false)->after('has_akta_fisik');
             $table->boolean('has_ijazah_fisik')->default(false)->after('has_kk_fisik');
-            
+
             // Pengukuran Fisik & Kesehatan Dasar
             $table->integer('berat_badan')->nullable()->comment('dalam kg')->after('golongan_darah');
             $table->integer('tinggi_badan')->nullable()->comment('dalam cm')->after('berat_badan');

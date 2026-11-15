@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\StorageHelper;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ class Kampanye extends Model
         'tanggal_mulai',
         'tanggal_berakhir',
         'status', // Aktif, Selesai, Dibatalkan
-        'thumbnail'
+        'thumbnail',
     ];
 
     public function donasi()
@@ -27,12 +28,18 @@ class Kampanye extends Model
         return $this->hasMany(Donasi::class);
     }
 
+    public function updates()
+    {
+        return $this->hasMany(KampanyeUpdate::class)->latest('tanggal_penyaluran')->latest('created_at');
+    }
+
     public function toArray()
     {
         $array = parent::toArray();
-        if (!empty($array['thumbnail']) && !str_starts_with($array['thumbnail'], 'http')) {
-            $array['thumbnail'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['thumbnail']);
+        if (! empty($array['thumbnail'])) {
+            $array['thumbnail'] = StorageHelper::getUrl($array['thumbnail']);
         }
+
         return $array;
     }
 }

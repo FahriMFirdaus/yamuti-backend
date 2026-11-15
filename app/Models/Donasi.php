@@ -24,7 +24,7 @@ class Donasi extends Model
         'transaction_id',
         'snap_token',
         'payment_url',
-        'is_anonymous'
+        'is_anonymous',
     ];
 
     protected $casts = [
@@ -36,6 +36,11 @@ class Donasi extends Model
         return $this->belongsTo(Kampanye::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function transaksiKeuangan()
     {
         return $this->hasMany(TransaksiKeuangan::class);
@@ -44,14 +49,14 @@ class Donasi extends Model
     public function toArray()
     {
         $array = parent::toArray();
-        
+
         // Proteksi Privasi Hamba Allah
         if ($this->is_anonymous) {
             // Hilangkan relasi user agar avatar asli tidak bocor ke publik
             if (isset($array['user'])) {
                 $array['user'] = null;
             }
-            
+
             // Opsional: Pastikan nama_donatur selalu disamarkan jika API diakses tanpa sengaja membocorkan
             if (empty($array['nama_donatur']) || strtolower($array['nama_donatur']) !== 'hamba allah') {
                 $array['nama_donatur'] = 'Hamba Allah';

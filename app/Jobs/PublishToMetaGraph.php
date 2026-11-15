@@ -15,19 +15,17 @@ class PublishToMetaGraph implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $message;
+
     public $imageUrl;
 
     /**
      * Create a new job instance.
-     *
-     * @param string $message
-     * @param string|null $imageUrl
      */
     public function __construct(string $message, ?string $imageUrl = null)
     {
         $this->message = $message;
         $this->imageUrl = $imageUrl;
-        
+
         $this->onQueue('default');
     }
 
@@ -39,12 +37,13 @@ class PublishToMetaGraph implements ShouldQueue
         $accessToken = env('META_GRAPH_ACCESS_TOKEN');
         $pageId = env('META_PAGE_ID');
 
-        if (!$accessToken || !$pageId) {
+        if (! $accessToken || ! $pageId) {
             Log::warning('Meta Graph API credentials not configured.');
+
             return;
         }
 
-        $endpoint = $this->imageUrl 
+        $endpoint = $this->imageUrl
             ? "https://graph.facebook.com/v19.0/{$pageId}/photos"
             : "https://graph.facebook.com/v19.0/{$pageId}/feed";
 
@@ -60,16 +59,16 @@ class PublishToMetaGraph implements ShouldQueue
         try {
             $response = Http::timeout(10)->post($endpoint, $payload);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('Gagal mempublikasikan ke Meta Graph', [
                     'status' => $response->status(),
-                    'response' => $response->body()
+                    'response' => $response->body(),
                 ]);
-                $this->fail(new \Exception('Meta API returned error: ' . $response->status()));
+                $this->fail(new \Exception('Meta API returned error: '.$response->status()));
             }
         } catch (\Exception $e) {
             Log::error('Exception saat mempublikasikan ke Meta', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             $this->fail($e);
         }

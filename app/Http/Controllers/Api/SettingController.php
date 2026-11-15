@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
@@ -15,17 +15,17 @@ class SettingController extends Controller
     public function index(): JsonResponse
     {
         $settings = Setting::all();
-        
-        if (!$settings->contains('key', 'donasi_split_rule')) {
+
+        if (! $settings->contains('key', 'donasi_split_rule')) {
             $defaultRules = [
                 ['nama_kas' => 'Yayasan Tasikmalaya', 'persentase' => 75],
                 ['nama_kas' => 'Admin Sistem', 'persentase' => 10],
                 ['nama_kas' => 'IT Support', 'persentase' => 5],
                 ['nama_kas' => 'Operasional Website', 'persentase' => 10],
             ];
-            $settings->push((object)[
+            $settings->push((object) [
                 'key' => 'donasi_split_rule',
-                'value' => $defaultRules
+                'value' => $defaultRules,
             ]);
         }
 
@@ -35,7 +35,7 @@ class SettingController extends Controller
     public function updateSplitRule(Request $request): JsonResponse
     {
         $value = $request->input('value');
-        
+
         if (is_string($value)) {
             $value = json_decode($value, true);
         }
@@ -55,7 +55,7 @@ class SettingController extends Controller
             [
                 'value' => $value,
                 'type' => 'json',
-                'description' => 'Pengaturan persentase pembagian donasi masuk'
+                'description' => 'Pengaturan persentase pembagian donasi masuk',
             ]
         );
 
@@ -81,10 +81,10 @@ class SettingController extends Controller
             'jam_senin_jumat' => '08.00 - 17.00',
             'jam_sabtu_minggu' => '09.00 - 15.00',
             'jam_libur' => 'Sesuai Janji Temu',
-            'slot_kunjungan_aktif' => ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00"],
+            'slot_kunjungan_aktif' => ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'],
         ];
 
-        $data = $setting && $setting->value ? array_merge($defaultData, (array)$setting->value) : $defaultData;
+        $data = $setting && $setting->value ? array_merge($defaultData, (array) $setting->value) : $defaultData;
 
         // Fallback jika belum diset terpisah
         if (empty($data['no_hp_resmi'])) {
@@ -130,18 +130,18 @@ class SettingController extends Controller
             [
                 'value' => $validated,
                 'type' => 'json',
-                'description' => 'Pengaturan koordinat lokasi, alamat, dan jam buka yayasan'
+                'description' => 'Pengaturan koordinat lokasi, alamat, dan jam buka yayasan',
             ]
         );
 
         // Sekaligus update jam_operasional_kunjungan jika ada slot_kunjungan_aktif
-        if (!empty($validated['slot_kunjungan_aktif'])) {
+        if (! empty($validated['slot_kunjungan_aktif'])) {
             Setting::updateOrCreate(
                 ['key' => 'jam_operasional_kunjungan'],
                 [
                     'value' => $validated['slot_kunjungan_aktif'],
                     'type' => 'json',
-                    'description' => 'Daftar slot jam kunjungan yang bisa dipilih tamu'
+                    'description' => 'Daftar slot jam kunjungan yang bisa dipilih tamu',
                 ]
             );
         }

@@ -14,8 +14,6 @@ class PengadaanBarangDibuat
 
     /**
      * Create a new event instance.
-     *
-     * @param MutasiBarang $mutasi
      */
     public function __construct(MutasiBarang $mutasi)
     {

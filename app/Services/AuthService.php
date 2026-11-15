@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class AuthService extends BaseService
 {
@@ -16,7 +18,7 @@ class AuthService extends BaseService
         $fotoUrl = null;
         if (isset($data['foto_identitas'])) {
             $path = $data['foto_identitas']->store('identitas/users', 's3');
-            $fotoUrl = \Illuminate\Support\Facades\Storage::disk('s3')->url($path);
+            $fotoUrl = Storage::disk('s3')->url($path);
         }
 
         $user = User::create([
@@ -32,7 +34,7 @@ class AuthService extends BaseService
         ]);
 
         // Assign default role untuk user yang register secara publik
-        if (\Spatie\Permission\Models\Role::where('name', 'donatur')->exists()) {
+        if (Role::where('name', 'donatur')->exists()) {
             $user->assignRole('donatur');
         }
 

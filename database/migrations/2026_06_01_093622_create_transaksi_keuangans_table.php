@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('nominal', 15, 2);
             $table->text('deskripsi');
             $table->uuid('donasi_id')->nullable(); // Jika pemasukan berasal dari pembagian donasi (split rule)
-            
+
             $table->foreignId('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();

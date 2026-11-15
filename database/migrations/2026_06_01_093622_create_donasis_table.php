@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('status', ['PENDING', 'PAID', 'FAILED'])->default('PENDING');
             $table->string('payment_type')->nullable(); // qris, bank_transfer, ewallet
             $table->string('transaction_id')->nullable()->unique(); // ID dari Payment Gateway
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

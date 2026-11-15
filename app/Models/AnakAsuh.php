@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\StorageHelper;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,7 @@ class AnakAsuh extends Model
         'tempat_lahir',
         'jenis_kelamin',
         'tanggal_lahir',
-        'status', 
+        'status',
         'kategori_bayi',
         'tanggal_masuk',
         'keterangan',
@@ -39,7 +40,7 @@ class AnakAsuh extends Model
         'riwayat_alergi',
         'status_imunisasi',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     protected $casts = [
@@ -56,14 +57,20 @@ class AnakAsuh extends Model
     public function toArray()
     {
         $array = parent::toArray();
-        if (!empty($array['foto_identitas']) && !str_starts_with($array['foto_identitas'], 'http')) {
-            $array['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['foto_identitas']);
+        if (! empty($array['foto_identitas'])) {
+            $array['foto_identitas'] = StorageHelper::getUrl($array['foto_identitas']);
         }
+
         return $array;
     }
 
     public function orangTuaAsuh()
     {
         return $this->hasMany(OrangTuaAsuh::class, 'anak_asuh_id');
+    }
+
+    public function records()
+    {
+        return $this->hasMany(AnakAsuhRecord::class, 'anak_asuh_id')->latest('tanggal_kejadian')->latest('created_at');
     }
 }

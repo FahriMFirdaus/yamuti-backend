@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Helpers\StorageHelper;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -17,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * Atribut tambahan yang akan otomatis dimuat ke dalam respon JSON.
@@ -31,7 +32,7 @@ class User extends Authenticatable
      */
     protected function getHasPasswordAttribute()
     {
-        return !empty($this->password);
+        return ! empty($this->password);
     }
 
     /**
@@ -66,9 +67,10 @@ class User extends Authenticatable
     public function toArray()
     {
         $array = parent::toArray();
-        if (!empty($array['foto_identitas']) && !str_starts_with($array['foto_identitas'], 'http')) {
-            $array['foto_identitas'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['foto_identitas']);
+        if (! empty($array['foto_identitas'])) {
+            $array['foto_identitas'] = StorageHelper::getUrl($array['foto_identitas']);
         }
+
         return $array;
     }
 }

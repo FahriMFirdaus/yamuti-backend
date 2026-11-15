@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Kunjungan;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 
 class KunjunganRequest extends FormRequest
@@ -23,37 +25,37 @@ class KunjunganRequest extends FormRequest
                 'date',
                 'after:today',
                 function ($attribute, $value, $fail) {
-                    $time = \Carbon\Carbon::parse($value);
-                    $isFullDay = request()->input('is_full_day', false);
-                    
+                    $time = Carbon::parse($value);
+                    $isFullDay = filter_var(request()->input('is_full_day', false), FILTER_VALIDATE_BOOLEAN);
+
                     if ($isFullDay) {
                         // Jika minta full day, pastikan tidak ada kunjungan APAPUN di hari tersebut
-                        $conflict = \App\Models\Kunjungan::whereIn('status', ['PENDING', 'APPROVED'])
+                        $conflict = Kunjungan::whereIn('status', ['PENDING', 'APPROVED'])
                             ->whereDate('slot_waktu', $time->toDateString())
                             ->exists();
-                            
+
                         if ($conflict) {
                             $fail('Hari tersebut sudah memiliki jadwal kunjungan parsial. Tidak bisa booking sehari penuh.');
                         }
                     } else {
                         // Jika kunjungan biasa, pastikan tidak bentrok dengan kunjungan Full Day di hari yang sama
-                        $fullDayConflict = \App\Models\Kunjungan::whereIn('status', ['PENDING', 'APPROVED'])
+                        $fullDayConflict = Kunjungan::whereIn('status', ['PENDING', 'APPROVED'])
                             ->whereDate('slot_waktu', $time->toDateString())
-                            ->where('is_full_day', 'true')
+                            ->where('is_full_day', true)
                             ->exists();
-                            
+
                         if ($fullDayConflict) {
                             $fail('Hari tersebut sudah dibooking penuh (Full Day) oleh tamu lain.');
                         }
-                        
+
                         // Cek bentrok jam (radius 2 jam) untuk kunjungan biasa
-                        $conflict = \App\Models\Kunjungan::whereIn('status', ['PENDING', 'APPROVED'])
-                            ->where('is_full_day', 'false')
+                        $conflict = Kunjungan::whereIn('status', ['PENDING', 'APPROVED'])
+                            ->where('is_full_day', false)
                             ->whereBetween('slot_waktu', [
                                 $time->copy()->subHours(2),
-                                $time->copy()->addHours(2)
+                                $time->copy()->addHours(2),
                             ])->exists();
-    
+
                         if ($conflict) {
                             $fail('Jadwal kunjungan pada waktu tersebut sudah penuh atau berbenturan dengan tamu lain. Mohon pilih waktu atau hari lain (minimal jeda 2 jam).');
                         }

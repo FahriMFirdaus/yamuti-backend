@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\AnakAsuh;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class UpdateAlumniStatus extends Command
@@ -41,6 +41,7 @@ class UpdateAlumniStatus extends Command
 
         if ($anakAsuhLulus->isEmpty()) {
             $this->info('Tidak ada Anak Asuh yang bertransisi menjadi Alumni hari ini.');
+
             return;
         }
 
@@ -48,7 +49,7 @@ class UpdateAlumniStatus extends Command
         foreach ($anakAsuhLulus as $anak) {
             $anak->update(['status' => 'Alumni']);
             $count++;
-            
+
             Log::info("Status anak asuh {$anak->nama} ({$anak->id}) diubah menjadi Alumni secara otomatis.");
         }
 

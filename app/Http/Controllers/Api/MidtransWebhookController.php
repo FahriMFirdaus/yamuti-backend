@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Donasi;
 use App\Services\DonasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,7 @@ class MidtransWebhookController extends Controller
     public function handle(Request $request)
     {
         $serverKey = config('services.midtrans.server_key');
-        
+
         $orderId = $request->order_id;
         $statusCode = $request->status_code;
         $grossAmount = $request->gross_amount;
@@ -27,10 +28,11 @@ class MidtransWebhookController extends Controller
         $transactionStatus = $request->transaction_status;
 
         // Verifikasi Signature
-        $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
-        
+        $expectedSignature = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
+
         if ($expectedSignature !== $signatureKey) {
             Log::warning("Midtrans Webhook Invalid Signature for Order: $orderId");
+
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
@@ -45,7 +47,7 @@ class MidtransWebhookController extends Controller
         }
 
         if (str_starts_with($orderId, 'GRP-')) {
-            $donasis = \App\Models\Donasi::where('payment_group_id', $orderId)->get();
+            $donasis = Donasi::where('payment_group_id', $orderId)->get();
             foreach ($donasis as $donasi) {
                 if ($status === 'PAID') {
                     $donasi->update([
@@ -56,7 +58,7 @@ class MidtransWebhookController extends Controller
                 $this->donasiService->updateStatus($donasi->id, $status);
             }
         } else {
-            $donasi = \App\Models\Donasi::find($orderId);
+            $donasi = Donasi::find($orderId);
             if ($donasi) {
                 if ($status === 'PAID') {
                     $donasi->update([

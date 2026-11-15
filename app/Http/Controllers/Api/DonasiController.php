@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DonasiRequest;
+use App\Models\Donasi;
 use App\Services\DonasiService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -22,13 +23,15 @@ class DonasiController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $data = $this->donasiService->getAllDonasi((int)$request->query('per_page', 15));
+        $data = $this->donasiService->getAllDonasi((int) $request->query('per_page', 15));
+
         return $this->successResponse($data, 'Data donasi berhasil diambil');
     }
 
     public function show($id): JsonResponse
     {
         $data = $this->donasiService->getDonasiById($id);
+
         return $this->successResponse($data, 'Detail donasi berhasil diambil');
     }
 
@@ -36,7 +39,7 @@ class DonasiController extends Controller
     {
         // Donatur bisa saja tamu yang tidak login, jadi id bersifat opsional
         $userId = $request->user('sanctum')?->id;
-        
+
         $validatedData = $request->validated();
         if (isset($validatedData['is_anonymous'])) {
             $validatedData['is_anonymous'] = filter_var($validatedData['is_anonymous'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
@@ -45,6 +48,7 @@ class DonasiController extends Controller
         }
 
         $data = $this->donasiService->createDonasi($validatedData, $userId);
+
         return $this->successResponse($data, 'Donasi berhasil dicatat', 201);
     }
 
@@ -53,6 +57,7 @@ class DonasiController extends Controller
         // Khusus untuk Admin yang menginput donasi tunai/cash
         $userId = $request->user('sanctum')?->id;
         $data = $this->donasiService->createDonasiManual($request->validated(), $userId);
+
         return $this->successResponse($data, 'Donasi tunai berhasil dicatat dan diverifikasi', 201);
     }
 
@@ -60,13 +65,15 @@ class DonasiController extends Controller
     {
         // Admin memverifikasi bukti donasi
         $data = $this->donasiService->updateStatus($id, 'PAID');
+
         return $this->successResponse($data, 'Donasi berhasil diverifikasi dan dana telah dialokasikan (Split 10-90)');
     }
 
     public function riwayat(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
-        $data = \App\Models\Donasi::where('user_id', $userId)->with('kampanye:id,judul,slug')->latest()->paginate(15);
+        $data = Donasi::where('user_id', $userId)->with('kampanye:id,judul,slug')->latest()->paginate(15);
+
         return $this->successResponse($data, 'Riwayat donasi berhasil diambil');
     }
 }

@@ -17,7 +17,7 @@ class OrangTuaAsuhController extends Controller
         $status = $request->query('status');
         $search = $request->query('search');
 
-        $query = OrangTuaAsuh::with(['anakAsuh:id,nama,status,tingkat_pendidikan,nama_sekolah,foto_identitas', 'user:id,name,email'])
+        $query = OrangTuaAsuh::with(['anakAsuh.records', 'user:id,name,email'])
             ->latest();
 
         if ($status) {
@@ -27,10 +27,10 @@ class OrangTuaAsuhController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_donatur', 'like', "%{$search}%")
-                  ->orWhere('no_hp', 'like', "%{$search}%")
-                  ->orWhereHas('anakAsuh', function ($sub) use ($search) {
-                      $sub->where('nama', 'like', "%{$search}%");
-                  });
+                    ->orWhere('no_hp', 'like', "%{$search}%")
+                    ->orWhereHas('anakAsuh', function ($sub) use ($search) {
+                        $sub->where('nama', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -65,6 +65,7 @@ class OrangTuaAsuhController extends Controller
     public function show($id): JsonResponse
     {
         $data = OrangTuaAsuh::with(['anakAsuh', 'user'])->findOrFail($id);
+
         return $this->successResponse($data, 'Detail orang tua asuh berhasil diambil');
     }
 

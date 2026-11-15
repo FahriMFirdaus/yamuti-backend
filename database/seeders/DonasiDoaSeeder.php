@@ -110,12 +110,12 @@ class DonasiDoaSeeder extends Seeder
                 'user_id' => null, // Guest/Tanpa Akun (sesuai permintaan user)
                 'kampanye_id' => $kampanyeId,
                 'nama_donatur' => $item['nama'],
-                'no_whatsapp' => '08' . rand(1111111111, 9999999999),
+                'no_whatsapp' => '08'.rand(1111111111, 9999999999),
                 'pesan' => $item['pesan'],
                 'gross_amount' => $item['nominal'],
                 'status' => 'PAID',
                 'payment_type' => 'qris',
-                'transaction_id' => 'TRX-DOA-' . strtoupper(Str::random(10)),
+                'transaction_id' => 'TRX-DOA-'.strtoupper(Str::random(10)),
                 'is_anonymous' => $item['is_anonymous'],
                 'created_at' => now()->subDays(rand(1, 30))->subHours(rand(1, 23)),
             ]);

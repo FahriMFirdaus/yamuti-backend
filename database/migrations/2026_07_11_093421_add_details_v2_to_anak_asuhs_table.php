@@ -33,7 +33,7 @@ return new class extends Migration
                 'nama_sekolah',
                 'golongan_darah',
                 'riwayat_penyakit',
-                'catatan_khusus'
+                'catatan_khusus',
             ]);
         });
     }

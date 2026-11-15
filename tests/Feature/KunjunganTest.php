@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Kunjungan;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class KunjunganTest extends TestCase
 {
@@ -26,7 +26,7 @@ class KunjunganTest extends TestCase
             'no_whatsapp' => '081222333444',
             'tanggal_rencana' => '2026-10-10',
             'maksud' => 'Donasi dan silaturahmi',
-            'jumlah_pengunjung' => 5, 'slot_waktu' => now()->addDays(2)->toDateTimeString()
+            'jumlah_pengunjung' => 5, 'slot_waktu' => now()->addDays(2)->toDateTimeString(),
         ]);
 
         $response->assertStatus(201);
@@ -40,7 +40,7 @@ class KunjunganTest extends TestCase
         $kunjungan = Kunjungan::factory()->create(['status' => 'PENDING']);
 
         $response = $this->actingAs($admin, 'sanctum')->patchJson("/api/kunjungan/{$kunjungan->id}/status", [
-            'status' => 'APPROVED'
+            'status' => 'APPROVED',
         ]);
 
         $response->assertStatus(200);

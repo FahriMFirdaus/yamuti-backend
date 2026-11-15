@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AnakAsuh;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AnakAsuhRequest extends FormRequest
 {
@@ -14,6 +16,8 @@ class AnakAsuhRequest extends FormRequest
     public function rules(): array
     {
         $isUpdate = $this->isMethod('put') || $this->isMethod('patch');
+        $anakAsuh = $this->route('anak_asuh') ?? $this->route('id');
+        $anakAsuhId = $anakAsuh instanceof AnakAsuh ? $anakAsuh->id : $anakAsuh;
 
         return [
             'nama' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:255'],
@@ -21,7 +25,7 @@ class AnakAsuhRequest extends FormRequest
                 'nullable',
                 'string',
                 'size:16',
-                \Illuminate\Validation\Rule::unique('anak_asuhs', 'nik')->ignore($this->route('id'))
+                Rule::unique('anak_asuhs', 'nik')->ignore($anakAsuhId),
             ],
             'no_kk' => ['nullable', 'string', 'size:16'],
             'no_akte' => ['nullable', 'string', 'max:255'],

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\StorageHelper;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,7 @@ class Artikel extends Model
         'kategori_id',
         'file_url',
         'thumbnail_url',
-        'penulis_id'
+        'penulis_id',
     ];
 
     public function penulis()
@@ -34,12 +35,13 @@ class Artikel extends Model
     public function toArray()
     {
         $array = parent::toArray();
-        if (!empty($array['thumbnail_url']) && !str_starts_with($array['thumbnail_url'], 'http')) {
-            $array['thumbnail_url'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['thumbnail_url']);
+        if (! empty($array['thumbnail_url'])) {
+            $array['thumbnail_url'] = StorageHelper::getUrl($array['thumbnail_url']);
         }
-        if (!empty($array['file_url']) && !str_starts_with($array['file_url'], 'http')) {
-            $array['file_url'] = \Illuminate\Support\Facades\Storage::disk('s3')->url($array['file_url']);
+        if (! empty($array['file_url'])) {
+            $array['file_url'] = StorageHelper::getUrl($array['file_url']);
         }
+
         return $array;
     }
 }

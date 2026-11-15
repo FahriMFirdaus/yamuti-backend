@@ -46,7 +46,17 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', env('FRONTEND_URL') . '/auth/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('FRONTEND_URL').'/auth/callback'),
+    ],
+
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+    ],
+
+    'whatsapp' => [
+        'url' => env('WHATSAPP_GATEWAY_URL', 'http://shared_wa_gateway:3000'),
+        'endpoint' => env('WHATSAPP_GATEWAY_ENDPOINT', '/api/send-message'),
+        'session_id' => env('WHATSAPP_SESSION_ID', 'yamuti'),
     ],
 
 ];

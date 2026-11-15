@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Kampanye;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Kampanye>
@@ -24,7 +25,7 @@ class KampanyeFactory extends Factory
         return [
             'id' => fake()->uuid(),
             'judul' => $judul,
-            'slug' => \Illuminate\Support\Str::slug($judul) . '-' . time(),
+            'slug' => Str::slug($judul).'-'.time(),
             'deskripsi' => fake()->paragraphs(3, true),
             'target_donasi' => fake()->randomElement([10000000, 25000000, 50000000, 100000000]),
             'tanggal_mulai' => $tanggalMulai->format('Y-m-d'),

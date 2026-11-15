@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AnakAsuh;
 use App\Models\Donasi;
+use App\Models\Kampanye;
 use App\Models\Kunjungan;
 use App\Services\TransaksiKeuanganService;
 use App\Traits\ApiResponse;
@@ -24,24 +25,38 @@ class DashboardController extends Controller
     public function summary(): JsonResponse
     {
         $totalAnakAsuh = AnakAsuh::where('status', 'Aktif')->count();
-        
+
         $totalDonasiBulanIni = Donasi::where('status', 'PAID')
             ->whereMonth('created_at', date('m'))
             ->whereYear('created_at', date('Y'))
             ->sum('gross_amount');
-            
+
         $totalKunjunganMenunggu = Kunjungan::where('status', 'PENDING')->count();
-        
+
         $saldoKasTerkini = $this->transaksiService->getSaldo();
 
         // Total Program Kampanye Aktif
-        $totalProgramAktif = \App\Models\Kampanye::whereNotIn('status', ['Draft', 'draft', 'Dibatalkan', 'dibatalkan', 'Selesai'])->count();
+        $totalProgramAktif = Kampanye::whereNotIn('status', ['Draft', 'draft', 'Dibatalkan', 'dibatalkan', 'Selesai'])->count();
 
         // 5 Donasi Terbaru (PAID)
-        $donasiTerbaru = Donasi::where('status', 'PAID')
+        $donasiTerbaru = Donasi::with(['kampanye:id,judul', 'user:id,name'])
+            ->where('status', 'PAID')
             ->latest()
             ->take(5)
-            ->get(['id', 'donor_name', 'gross_amount', 'created_at', 'program_name']);
+            ->get(['id', 'user_id', 'nama_donatur', 'gross_amount', 'created_at', 'kampanye_id', 'is_anonymous'])
+            ->map(function ($d) {
+                $donorName = $d->is_anonymous
+                    ? 'Hamba Allah'
+                    : ($d->nama_donatur ?? $d->user?->name ?? 'Hamba Allah');
+
+                return [
+                    'id' => $d->id,
+                    'donor_name' => $donorName,
+                    'gross_amount' => (float) $d->gross_amount,
+                    'created_at' => $d->created_at ? $d->created_at->toISOString() : null,
+                    'program_name' => $d->kampanye?->judul ?? 'Donasi Umum',
+                ];
+            });
 
         // Data Pemasukan 7 Hari Terakhir
         $chartHarian = [];
@@ -49,7 +64,7 @@ class DashboardController extends Controller
             $carbon = now()->subDays($i);
             $date = $carbon->format('Y-m-d');
             $dayLabel = $carbon->translatedFormat('D');
-            
+
             $nominalHarian = Donasi::where('status', 'PAID')
                 ->whereDate('created_at', $date)
                 ->sum('gross_amount');

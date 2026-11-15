@@ -20,40 +20,39 @@ class BroadcastController extends Controller
     {
         $validated = $request->validate([
             'pesan' => 'required|string',
-            'target_penerima' => 'required|in:donatur,kunjungan,semua'
+            'target_penerima' => 'required|in:donatur,kunjungan,semua',
         ]);
 
         $targets = collect();
 
         // Mode Operasional Nyata
         if ($validated['target_penerima'] === 'donatur' || $validated['target_penerima'] === 'semua') {
-            // 1. Ambil nomor dari orang yang pernah berdonasi (Guest/Tamu maupun terdaftar)
+            // 1. Ambil nomor dari orang yang pernah berdonasi
             $donatursDariTransaksi = Donasi::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
             $targets = $targets->merge($donatursDariTransaksi);
-            
-            // 2. Ambil nomor dari Akun User yang sudah mendaftar sebagai 'donatur' (meskipun belum berdonasi)
+
+            // 2. Ambil nomor dari Akun User yang sudah mendaftar sebagai 'donatur'
             $donatursTerdaftar = User::role('donatur')->whereNotNull('no_hp')->pluck('no_hp');
             $targets = $targets->merge($donatursTerdaftar);
         }
 
         if ($validated['target_penerima'] === 'kunjungan' || $validated['target_penerima'] === 'semua') {
-            // Ambil nomor dari masyarakat yang pernah melakukan Kunjungan
             $kunjungans = Kunjungan::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
             $targets = $targets->merge($kunjungans);
         }
-        
+
         if ($validated['target_penerima'] === 'semua') {
-            // Jika dikirim ke semua, masukkan juga seluruh akun (termasuk admin)
             $users = User::whereNotNull('no_hp')->pluck('no_hp');
             $targets = $targets->merge($users);
         }
 
-        // Bersihkan dan standarisasi nomor HP ke format yang diterima WA/Fonnte
+        // Bersihkan dan standarisasi nomor HP
         $validNumbers = $targets->map(function ($num) {
             $cleaned = preg_replace('/[^0-9]/', '', $num);
             if (str_starts_with($cleaned, '0')) {
-                return '62' . substr($cleaned, 1);
+                return '62'.substr($cleaned, 1);
             }
+
             return $cleaned;
         })->filter(function ($num) {
             return strlen($num) >= 10;
@@ -63,38 +62,45 @@ class BroadcastController extends Controller
             return $this->errorResponse('Tidak ada target nomor HP yang valid untuk dikirim.', 400);
         }
 
-        // Fonnte menerima multiple numbers dipisahkan koma
-        $targetString = implode(',', $validNumbers);
+        $gatewayUrl = config('services.whatsapp.url', env('WHATSAPP_GATEWAY_URL', 'http://shared_wa_gateway:3000'));
+        $endpoint = config('services.whatsapp.endpoint', env('WHATSAPP_GATEWAY_ENDPOINT', '/api/send-message'));
+        $sessionId = config('services.whatsapp.session_id', env('WHATSAPP_SESSION_ID', 'yamuti'));
 
-        try {
-            $token = env('FONNTE_TOKEN', 'Pz37ptpxRHQpUK4WGETN');
-
-            $response = Http::withHeaders([
-                'Authorization' => $token,
-            ])->post('https://api.fonnte.com/send', [
-                'target' => $targetString,
-                'message' => $validated['pesan'],
-                'countryCode' => '62', // Otomatis meng-handle format 08 menjadi 628
-                'delay' => '5-10' // Anti-ban: Jeda acak 5 sampai 10 detik antar setiap pengiriman pesan
-            ]);
-
-            $result = $response->json();
-
-            if ($response->successful() && isset($result['status']) && $result['status'] === true) {
-                return $this->successResponse([
-                    'pesan' => $validated['pesan'],
-                    'target_count' => count($validNumbers),
-                    'numbers_sent' => $validNumbers,
-                    'fonnte_response' => $result
-                ], 'Hore! Pesan broadcast berhasil ditembakkan ke WhatsApp via Fonnte.');
-            } else {
-                Log::error('Fonnte API Error', ['response' => $result]);
-                return $this->errorResponse('Gagal mengirim pesan dari sisi provider Fonnte', 500, $result);
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Broadcast Exception: ' . $e->getMessage());
-            return $this->errorResponse('Terjadi kesalahan sistem saat menghubungi Fonnte', 500, $e->getMessage());
+        if (! $gatewayUrl) {
+            return $this->errorResponse('Konfigurasi WHATSAPP_GATEWAY_URL belum diatur.', 500);
         }
+
+        $successCount = 0;
+        $failedCount = 0;
+        $url = rtrim($gatewayUrl, '/').$endpoint;
+
+        foreach ($validNumbers as $number) {
+            try {
+                $payload = [
+                    'number' => $number,
+                    'message' => $validated['pesan'],
+                ];
+                if ($sessionId) {
+                    $payload['sessionId'] = $sessionId;
+                }
+
+                $response = Http::timeout(10)->post($url, $payload);
+                if ($response->successful() && ($response->json('status') === true || $response->json('success') === true)) {
+                    $successCount++;
+                } else {
+                    $failedCount++;
+                }
+            } catch (\Exception $e) {
+                $failedCount++;
+                Log::error("Broadcast error to {$number}: ".$e->getMessage());
+            }
+        }
+
+        return $this->successResponse([
+            'pesan' => $validated['pesan'],
+            'total_target' => count($validNumbers),
+            'berhasil' => $successCount,
+            'gagal' => $failedCount,
+        ], "Pesan broadcast diproses. Berhasil: {$successCount}, Gagal/Pending: {$failedCount}");
     }
 }

@@ -14,11 +14,11 @@ return new class extends Migration
             $table->date('tanggal_lahir')->index();
             $table->enum('status', ['Aktif', 'Alumni'])->default('Aktif');
             $table->boolean('kategori_bayi')->default(false);
-            
+
             // Kolom audit trail
             $table->foreignId('created_by')->nullable();
             $table->foreignId('updated_by')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

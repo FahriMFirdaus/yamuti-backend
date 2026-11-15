@@ -3,10 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\AnakAsuh;
-use App\Models\Inventaris;
-use App\Models\Donasi;
-use App\Models\Kunjungan;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 

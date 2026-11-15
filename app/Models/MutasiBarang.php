@@ -19,7 +19,7 @@ class MutasiBarang extends Model
         'tanggal_mutasi',
         'transaksi_keuangan_id',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     protected $casts = [

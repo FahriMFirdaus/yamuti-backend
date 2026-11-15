@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PublishToMetaGraph;
 use App\Models\Galeri;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Jobs\PublishToMetaGraph;
 
 class GaleriController extends Controller
 {
@@ -17,6 +17,7 @@ class GaleriController extends Controller
     {
         $perPage = $request->query('per_page', 15);
         $galeris = Galeri::with('pengunggah:id,name')->latest()->paginate($perPage);
+
         return $this->successResponse($galeris, 'Data galeri berhasil diambil');
     }
 
@@ -25,12 +26,12 @@ class GaleriController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'file' => 'required|image|max:5120' // max 5MB
+            'file' => 'required|image|max:5120', // max 5MB
         ]);
 
         $fileUrl = null;
         if ($request->hasFile('file')) {
-            $hasS3 = !empty(config('filesystems.disks.s3.bucket'));
+            $hasS3 = ! empty(config('filesystems.disks.s3.bucket'));
             if ($hasS3) {
                 $path = $request->file('file')->store('galeris', 's3');
                 $fileUrl = Storage::disk('s3')->url($path);
@@ -56,6 +57,7 @@ class GaleriController extends Controller
     public function show($id)
     {
         $galeri = Galeri::with('pengunggah:id,name')->findOrFail($id);
+
         return $this->successResponse($galeri, 'Detail galeri');
     }
 
@@ -63,6 +65,7 @@ class GaleriController extends Controller
     {
         $galeri = Galeri::findOrFail($id);
         $galeri->delete();
+
         return $this->successResponse(null, 'Foto galeri berhasil dihapus');
     }
 
@@ -73,7 +76,7 @@ class GaleriController extends Controller
         $validated = $request->validate([
             'judul' => 'sometimes|required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'file' => 'nullable|image|max:5120'
+            'file' => 'nullable|image|max:5120',
         ]);
 
         if ($request->hasFile('file')) {

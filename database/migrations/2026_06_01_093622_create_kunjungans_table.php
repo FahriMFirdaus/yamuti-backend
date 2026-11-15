@@ -16,10 +16,10 @@ return new class extends Migration
             $table->text('maksud');
             $table->dateTime('slot_waktu')->index();
             $table->enum('status', ['PENDING', 'APPROVED', 'REJECTED'])->default('PENDING');
-            
+
             $table->uuid('branch_id')->nullable();
             $table->foreignId('approved_by')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

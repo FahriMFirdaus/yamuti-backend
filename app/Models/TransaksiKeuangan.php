@@ -18,7 +18,7 @@ class TransaksiKeuangan extends Model
         'nominal',
         'deskripsi',
         'donasi_id',
-        'created_by'
+        'created_by',
     ];
 
     protected $appends = ['status', 'amountRaw'];

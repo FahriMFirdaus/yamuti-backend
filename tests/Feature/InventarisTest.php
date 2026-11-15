@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Inventaris;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class InventarisTest extends TestCase
 {
@@ -27,7 +27,7 @@ class InventarisTest extends TestCase
             'nama_barang' => 'Laptop Baru',
             'deskripsi' => 'Laptop admin',
             'stok_sekarang' => 2,
-            'satuan' => 'Unit'
+            'satuan' => 'Unit',
         ]);
 
         $response->assertStatus(201);
@@ -43,7 +43,7 @@ class InventarisTest extends TestCase
         $response = $this->actingAs($admin, 'sanctum')->postJson("/api/inventaris/{$inventaris->id}/mutasi", [
             'tipe' => 'masuk',
             'jumlah' => 5,
-            'keterangan' => 'Tambahan laptop', 'tanggal_mutasi' => now()->toDateString()
+            'keterangan' => 'Tambahan laptop', 'tanggal_mutasi' => now()->toDateString(),
         ]);
 
         $response->assertStatus(201);

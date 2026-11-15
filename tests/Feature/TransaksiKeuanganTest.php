@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
-use App\Models\TransaksiKeuangan;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class TransaksiKeuanganTest extends TestCase
 {
@@ -27,7 +26,7 @@ class TransaksiKeuanganTest extends TestCase
             'jenis_kas' => 'Pusat',
             'tipe_transaksi' => 'Debit',
             'nominal' => 1000000,
-            'deskripsi' => 'Sumbangan tunai'
+            'deskripsi' => 'Sumbangan tunai',
         ]);
 
         $response->assertStatus(201);

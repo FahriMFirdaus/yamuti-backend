@@ -20,11 +20,11 @@ class MidtransService
     {
         $snapToken = Snap::getSnapToken($transactionData);
         // Dalam mode non-production URL mengarah ke sandbox
-        $paymentUrl = 'https://app.' . (Config::$isProduction ? '' : 'sandbox.') . 'midtrans.com/snap/v2/vtweb/' . $snapToken;
+        $paymentUrl = 'https://app.'.(Config::$isProduction ? '' : 'sandbox.').'midtrans.com/snap/v2/vtweb/'.$snapToken;
 
         return [
             'snap_token' => $snapToken,
-            'payment_url' => $paymentUrl
+            'payment_url' => $paymentUrl,
         ];
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleService extends BaseService
 {
@@ -43,9 +43,10 @@ class RoleService extends BaseService
     public function deleteRole($id)
     {
         $role = Role::findOrFail($id);
+
         return $role->delete();
     }
-    
+
     public function getAllPermissions()
     {
         return Permission::all();

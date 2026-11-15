@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\Donasi;
 use App\Services\DonasiService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use Tests\TestCase;
 
 class MidtransWebhookTest extends TestCase
 {
@@ -29,7 +29,7 @@ class MidtransWebhookTest extends TestCase
         $grossAmount = '500000.00';
         $transactionStatus = 'settlement';
 
-        $signatureKey = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+        $signatureKey = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
 
         $payload = [
             'order_id' => $orderId,
@@ -45,7 +45,7 @@ class MidtransWebhookTest extends TestCase
         $mockService->shouldReceive('updateStatus')
             ->once()
             ->with($orderId, 'PAID');
-            
+
         $this->app->instance(DonasiService::class, $mockService);
 
         // 3. Act

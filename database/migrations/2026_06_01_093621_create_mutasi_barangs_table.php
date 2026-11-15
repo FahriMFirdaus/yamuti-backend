@@ -15,11 +15,11 @@ return new class extends Migration
             $table->integer('jumlah');
             $table->text('keterangan')->nullable();
             $table->date('tanggal_mutasi');
-            
+
             $table->uuid('transaksi_keuangan_id')->nullable(); // Relasi ke trigger finansial
             $table->foreignId('created_by')->nullable();
             $table->foreignId('updated_by')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

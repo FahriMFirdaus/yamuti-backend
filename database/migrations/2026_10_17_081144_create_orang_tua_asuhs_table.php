@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('nama_donatur');
             $table->string('no_hp', 30);
             $table->string('email')->nullable();
-            
+
             // Relasi ke Anak Asuh yang diasuh
             $table->foreignUuid('anak_asuh_id')->constrained('anak_asuhs')->onDelete('cascade');
-            
+
             // Komitmen Finansial Bulanan
             $table->decimal('nominal_bulanan', 12, 2)->default(100000); // Misal: Rp 100.000, Rp 250.000, Rp 500.000
             $table->enum('status', ['Aktif', 'Jeda', 'Selesai'])->default('Aktif');
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->date('tanggal_selesai')->nullable();
             $table->integer('hari_tagihan_per_bulan')->default(1); // Tanggal 1, 5, atau 10 setiap bulan
             $table->text('catatan_doa')->nullable(); // Pesan doa khusus dari donatur untuk anak asuhnya
-            
+
             $table->foreignId('created_by')->nullable();
             $table->foreignId('updated_by')->nullable();
             $table->timestamps();

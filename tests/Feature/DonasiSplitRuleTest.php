@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\Jobs\SendWhatsAppMessage;
 use App\Models\Donasi;
 use App\Models\TransaksiKeuangan;
 use App\Services\DonasiService;
-use App\Jobs\SendWhatsAppMessage;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Tests\TestCase;
 
 class DonasiSplitRuleTest extends TestCase
 {

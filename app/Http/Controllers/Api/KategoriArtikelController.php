@@ -12,10 +12,11 @@ class KategoriArtikelController extends Controller
     public function index()
     {
         $kategoris = KategoriArtikel::all();
+
         return response()->json([
             'success' => true,
             'message' => 'Daftar kategori artikel berhasil diambil',
-            'data' => $kategoris
+            'data' => $kategoris,
         ]);
     }
 
@@ -23,7 +24,7 @@ class KategoriArtikelController extends Controller
     {
         $validated = $request->validate([
             'nama_kategori' => 'required|string|max:255',
-            'slug' => 'nullable|string|unique:kategori_artikels,slug'
+            'slug' => 'nullable|string|unique:kategori_artikels,slug',
         ]);
 
         if (empty($validated['slug'])) {
@@ -35,27 +36,28 @@ class KategoriArtikelController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Kategori artikel berhasil ditambahkan',
-            'data' => $kategori
+            'data' => $kategori,
         ], 201);
     }
 
     public function show(string $id)
     {
         $kategori = KategoriArtikel::findOrFail($id);
+
         return response()->json([
             'success' => true,
             'message' => 'Detail kategori artikel berhasil diambil',
-            'data' => $kategori
+            'data' => $kategori,
         ]);
     }
 
     public function update(Request $request, string $id)
     {
         $kategori = KategoriArtikel::findOrFail($id);
-        
+
         $validated = $request->validate([
             'nama_kategori' => 'sometimes|required|string|max:255',
-            'slug' => 'nullable|string|unique:kategori_artikels,slug,' . $id
+            'slug' => 'nullable|string|unique:kategori_artikels,slug,'.$id,
         ]);
 
         if (isset($validated['nama_kategori']) && empty($validated['slug'])) {
@@ -67,7 +69,7 @@ class KategoriArtikelController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Kategori artikel berhasil diperbarui',
-            'data' => $kategori
+            'data' => $kategori,
         ]);
     }
 
@@ -79,7 +81,7 @@ class KategoriArtikelController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Kategori artikel berhasil dihapus',
-            'data' => null
+            'data' => null,
         ]);
     }
 }

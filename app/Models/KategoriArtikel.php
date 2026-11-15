@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 
 class KategoriArtikel extends Model
 {
@@ -12,7 +11,7 @@ class KategoriArtikel extends Model
 
     protected $fillable = [
         'nama_kategori',
-        'slug'
+        'slug',
     ];
 
     public function artikel()

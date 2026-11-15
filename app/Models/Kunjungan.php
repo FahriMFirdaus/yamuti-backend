@@ -20,7 +20,7 @@ class Kunjungan extends Model
         'is_full_day',
         'status',
         'branch_id',
-        'approved_by'
+        'approved_by',
     ];
 
     protected $casts = [

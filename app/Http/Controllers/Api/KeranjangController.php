@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Traits\ApiResponse;
-use App\Models\Keranjang;
 use App\Models\Donasi;
+use App\Models\Keranjang;
 use App\Services\MidtransService;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class KeranjangController extends Controller
 {
@@ -18,19 +18,21 @@ class KeranjangController extends Controller
     public function count(Request $request)
     {
         $count = Keranjang::where('user_id', $request->user()->id)->count();
+
         return $this->successResponse(['count' => $count], 'Berhasil mengambil jumlah keranjang');
     }
 
     public function index(Request $request)
     {
         $items = Keranjang::with('kampanye:id,judul,slug')->where('user_id', $request->user()->id)->latest()->get();
+
         return $this->successResponse($items, 'Berhasil mengambil data keranjang');
     }
 
     public function store(Request $request)
     {
         // Support both nominal and gross_amount from frontend
-        if (!$request->has('nominal') && $request->has('gross_amount')) {
+        if (! $request->has('nominal') && $request->has('gross_amount')) {
             $request->merge(['nominal' => $request->gross_amount]);
         }
 
@@ -48,6 +50,7 @@ class KeranjangController extends Controller
         $validated['no_whatsapp'] = $validated['no_whatsapp'] ?? $request->user()->no_hp;
 
         Keranjang::create($validated);
+
         return $this->successResponse(null, 'Item berhasil ditambahkan ke keranjang', 201);
     }
 
@@ -55,6 +58,7 @@ class KeranjangController extends Controller
     {
         $keranjang = Keranjang::where('user_id', $request->user()->id)->findOrFail($id);
         $keranjang->delete();
+
         return $this->successResponse(null, 'Item berhasil dihapus dari keranjang');
     }
 
@@ -62,7 +66,7 @@ class KeranjangController extends Controller
     {
         $validated = $request->validate([
             'keranjang_ids' => 'required|array',
-            'keranjang_ids.*' => 'required|exists:keranjangs,id'
+            'keranjang_ids.*' => 'required|exists:keranjangs,id',
         ]);
 
         $items = Keranjang::whereIn('id', $validated['keranjang_ids'])
@@ -74,7 +78,7 @@ class KeranjangController extends Controller
         }
 
         return DB::transaction(function () use ($items, $request) {
-            $paymentGroupId = 'GRP-' . Str::uuid()->toString();
+            $paymentGroupId = 'GRP-'.Str::uuid()->toString();
             $totalAmount = $items->sum('nominal');
 
             // Kita buat array order detail untuk midtrans
@@ -99,12 +103,12 @@ class KeranjangController extends Controller
                     'id' => $donasi->id,
                     'price' => $item->nominal,
                     'quantity' => 1,
-                    'name' => 'Donasi ' . ($item->kampanye ? Str::limit($item->kampanye->judul, 30) : 'Umum')
+                    'name' => 'Donasi '.($item->kampanye ? Str::limit($item->kampanye->judul, 30) : 'Umum'),
                 ];
             }
 
             // Integrasi Midtrans
-            $midtransService = new MidtransService();
+            $midtransService = new MidtransService;
             $midtransData = $midtransService->createTransaction([
                 'transaction_details' => [
                     'order_id' => $paymentGroupId, // 1 ID Induk untuk semua item
@@ -115,13 +119,13 @@ class KeranjangController extends Controller
                     'first_name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'phone' => $request->user()->no_hp,
-                ]
+                ],
             ]);
 
             // Update Snap Token ke semua donasi yang ada di grup ini
             Donasi::where('payment_group_id', $paymentGroupId)->update([
                 'snap_token' => $midtransData['snap_token'],
-                'payment_url' => $midtransData['payment_url']
+                'payment_url' => $midtransData['payment_url'],
             ]);
 
             // Hapus item dari keranjang
@@ -131,7 +135,7 @@ class KeranjangController extends Controller
                 'payment_group_id' => $paymentGroupId,
                 'snap_token' => $midtransData['snap_token'],
                 'payment_url' => $midtransData['payment_url'],
-                'total_amount' => $totalAmount
+                'total_amount' => $totalAmount,
             ], 'Checkout keranjang berhasil');
         });
     }

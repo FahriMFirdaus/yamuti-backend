@@ -14,10 +14,10 @@ return new class extends Migration
             $table->text('deskripsi')->nullable();
             $table->integer('stok_sekarang')->default(0);
             $table->string('satuan'); // misal: pcs, kg, kardus
-            
+
             $table->foreignId('created_by')->nullable();
             $table->foreignId('updated_by')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
         });
