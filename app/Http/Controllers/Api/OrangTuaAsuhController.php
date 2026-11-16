@@ -107,7 +107,12 @@ class OrangTuaAsuhController extends Controller
     {
         $user = $request->user();
 
-        $data = OrangTuaAsuh::with(['anakAsuh:id,nama,nik,jenis_kelamin,tingkat_pendidikan,nama_sekolah,status,foto_identitas'])
+        $data = OrangTuaAsuh::with([
+            'anakAsuh:id,nama,nik,jenis_kelamin,tanggal_lahir,tempat_lahir,tingkat_pendidikan,nama_sekolah,status,foto_identitas,status_keluarga,keterangan,tinggi_badan,berat_badan,riwayat_penyakit,status_imunisasi',
+            'anakAsuh.records' => function ($q) {
+                $q->latest('tanggal_kejadian');
+            }
+        ])
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id);
                 if (! empty($user->email)) {
