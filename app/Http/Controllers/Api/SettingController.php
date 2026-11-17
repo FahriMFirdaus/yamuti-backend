@@ -148,4 +148,50 @@ class SettingController extends Controller
 
         return $this->successResponse($setting->value, 'Lokasi dan Jam Operasional berhasil diperbarui');
     }
+
+    public function getNisabZakat(): JsonResponse
+    {
+        $setting = Setting::where('key', 'nisab_zakat_baznas')->first();
+
+        $defaultData = [
+            'tahun' => 2026,
+            'dasar_hukum' => 'SK Ketua BAZNAS No. 15 Tahun 2026',
+            'nisab_tahunan' => 91681728,
+            'nisab_bulanan' => 7640144,
+            'tarif_persen' => 2.5,
+            'harga_emas_acuan_per_gram' => 1078608,
+            'keterangan' => 'Standar resmi nisab zakat pendapatan & jasa BAZNAS RI',
+            'terakhir_diperbarui' => '2026-02-21',
+        ];
+
+        $data = $setting && $setting->value ? array_merge($defaultData, (array) $setting->value) : $defaultData;
+
+        return $this->successResponse($data, 'Data acuan nisab zakat resmi BAZNAS');
+    }
+
+    public function updateNisabZakat(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tahun' => 'required|integer|min:2020|max:2099',
+            'dasar_hukum' => 'required|string|max:255',
+            'nisab_tahunan' => 'required|numeric|min:1',
+            'nisab_bulanan' => 'required|numeric|min:1',
+            'tarif_persen' => 'required|numeric|min:0.1|max:100',
+            'harga_emas_acuan_per_gram' => 'nullable|numeric|min:1',
+            'keterangan' => 'nullable|string|max:500',
+        ]);
+
+        $validated['terakhir_diperbarui'] = now()->toDateString();
+
+        $setting = Setting::updateOrCreate(
+            ['key' => 'nisab_zakat_baznas'],
+            [
+                'value' => $validated,
+                'type' => 'json',
+                'description' => 'Acuan resmi ketetapan nisab zakat SK BAZNAS RI',
+            ]
+        );
+
+        return $this->successResponse($setting->value, 'Acuan ketetapan nisab zakat BAZNAS berhasil diperbarui');
+    }
 }

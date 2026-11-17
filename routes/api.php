@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // System Settings (Super Admin Only)
         Route::post('/settings/split-rule', [SettingController::class, 'updateSplitRule']);
         Route::post('/settings/lokasi-operasional', [SettingController::class, 'updateLokasiOperasional']);
+        Route::post('/settings/nisab-zakat', [SettingController::class, 'updateNisabZakat']);
     });
 
     // ==========================================
@@ -128,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // System Settings (Read-only for Admin & Super Admin)
         Route::get('/settings', [SettingController::class, 'index']);
         Route::get('/settings/lokasi-operasional', [SettingController::class, 'getLokasiOperasional']);
+        Route::get('/settings/nisab-zakat', [SettingController::class, 'getNisabZakat']);
     });
 });
 
@@ -165,6 +167,7 @@ Route::prefix('landing')->group(function () {
     Route::get('/slides', [LandingController::class, 'slides']);
     Route::get('/doa', [LandingController::class, 'doa']);
     Route::get('/operasional', [SettingController::class, 'getLokasiOperasional']);
+    Route::get('/nisab-zakat', [SettingController::class, 'getNisabZakat']);
 });
 
 // Rute Profil & Riwayat (Bisa diakses oleh semua User yang sedang login)
