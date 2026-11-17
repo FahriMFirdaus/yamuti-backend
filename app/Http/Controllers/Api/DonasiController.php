@@ -72,7 +72,38 @@ class DonasiController extends Controller
     public function riwayat(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
-        $data = Donasi::where('user_id', $userId)->with('kampanye:id,judul,slug')->latest()->paginate(15);
+        $perPage = (int) $request->query('per_page', 10);
+        if ($perPage <= 0 || $perPage > 100) {
+            $perPage = 10;
+        }
+
+        $query = Donasi::where('user_id', $userId)->with('kampanye:id,judul,slug');
+
+        // Optional filter status
+        $status = $request->query('status');
+        if ($status) {
+            if (in_array(strtolower($status), ['berhasil', 'paid', 'success', 'settlement'])) {
+                $query->whereIn('status', ['PAID', 'paid', 'success', 'settlement', 'Berhasil']);
+            } elseif (in_array(strtolower($status), ['pending', 'menunggu'])) {
+                $query->whereIn('status', ['PENDING', 'pending', 'Menunggu']);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        // Optional search query
+        $q = $request->query('q');
+        if ($q) {
+            $query->where(function ($w) use ($q) {
+                $w->where('invoice', 'like', "%{$q}%")
+                  ->orWhere('id', 'like', "%{$q}%")
+                  ->orWhereHas('kampanye', function ($kq) use ($q) {
+                      $kq->where('judul', 'like', "%{$q}%");
+                  });
+            });
+        }
+
+        $data = $query->latest()->paginate($perPage);
 
         return $this->successResponse($data, 'Riwayat donasi berhasil diambil');
     }
