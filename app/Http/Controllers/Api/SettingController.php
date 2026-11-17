@@ -160,6 +160,7 @@ class SettingController extends Controller
             'nisab_bulanan' => 7640144,
             'tarif_persen' => 2.5,
             'harga_emas_acuan_per_gram' => 1078608,
+            'haul_kondisi_bulan' => 12,
             'keterangan' => 'Standar resmi nisab zakat pendapatan & jasa BAZNAS RI',
             'terakhir_diperbarui' => '2026-02-21',
         ];
@@ -178,6 +179,7 @@ class SettingController extends Controller
             'nisab_bulanan' => 'required|numeric|min:1',
             'tarif_persen' => 'required|numeric|min:0.1|max:100',
             'harga_emas_acuan_per_gram' => 'nullable|numeric|min:1',
+            'haul_kondisi_bulan' => 'nullable|integer|min:1',
             'keterangan' => 'nullable|string|max:500',
         ]);
 

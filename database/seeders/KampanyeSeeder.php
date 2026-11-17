@@ -62,6 +62,26 @@ class KampanyeSeeder extends Seeder
                 'tanggal_mulai' => now()->startOfMonth()->format('Y-m-d'),
                 'tanggal_berakhir' => now()->addMonths(2)->format('Y-m-d'),
             ],
+            [
+                'judul' => 'Zakat Maal',
+                'slug' => 'zakat-maal',
+                'deskripsi' => 'Penyaluran zakat harta simpanan dan tabungan sesuai nisab 85 gram emas BAZNAS RI.',
+                'target_donasi' => 1000000000,
+                'status' => 'Aktif',
+                'thumbnail' => 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?q=80&w=800&auto=format&fit=crop',
+                'tanggal_mulai' => now()->startOfYear()->format('Y-m-d'),
+                'tanggal_berakhir' => now()->addYears(2)->format('Y-m-d'),
+            ],
+            [
+                'judul' => 'Zakat Profesi',
+                'slug' => 'zakat-profesi',
+                'deskripsi' => 'Penyaluran zakat penghasilan dan profesi sesuai standar SK Ketua BAZNAS RI.',
+                'target_donasi' => 500000000,
+                'status' => 'Aktif',
+                'thumbnail' => 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=800&auto=format&fit=crop',
+                'tanggal_mulai' => now()->startOfYear()->format('Y-m-d'),
+                'tanggal_berakhir' => now()->addYears(2)->format('Y-m-d'),
+            ],
         ];
 
         Schema::disableForeignKeyConstraints();
@@ -73,7 +93,7 @@ class KampanyeSeeder extends Seeder
             Kampanye::create([
                 'id' => (string) Str::uuid(),
                 'judul' => $prog['judul'],
-                'slug' => Str::slug($prog['judul']),
+                'slug' => $prog['slug'] ?? Str::slug($prog['judul']),
                 'deskripsi' => $prog['deskripsi'],
                 'target_donasi' => $prog['target_donasi'],
                 'status' => $prog['status'],

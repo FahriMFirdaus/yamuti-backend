@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\TransaksiKeuangan;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DonasiService extends BaseService
 {
@@ -30,13 +31,37 @@ class DonasiService extends BaseService
         $data['status'] = 'PENDING';
 
         $donasi = Donasi::create($data);
+        $donasi->loadMissing('kampanye');
+
+        $itemName = 'Donasi Umum';
+        if ($donasi->kampanye) {
+            $itemName = $donasi->kampanye->judul;
+        } elseif ($donasi->pesan && stripos($donasi->pesan, '[Zakat') !== false) {
+            if (stripos($donasi->pesan, 'Profesi') !== false) {
+                $itemName = 'Zakat Profesi';
+            } elseif (stripos($donasi->pesan, 'Maal') !== false) {
+                $itemName = 'Zakat Maal';
+            } elseif (stripos($donasi->pesan, 'Fitrah') !== false) {
+                $itemName = 'Zakat Fitrah';
+            } else {
+                $itemName = 'Zakat';
+            }
+        }
 
         // Integrasi Midtrans
-        $midtransService = new MidtransService;
+        $midtransService = app(MidtransService::class);
         $midtransData = $midtransService->createTransaction([
             'transaction_details' => [
                 'order_id' => $donasi->id,
                 'gross_amount' => $donasi->gross_amount,
+            ],
+            'item_details' => [
+                [
+                    'id' => $donasi->id,
+                    'price' => (int) $donasi->gross_amount,
+                    'quantity' => 1,
+                    'name' => Str::limit($itemName, 50),
+                ],
             ],
             'customer_details' => [
                 'first_name' => $donasi->nama_donatur,

@@ -99,16 +99,31 @@ class KeranjangController extends Controller
                 ]);
                 $donasis[] = $donasi;
 
+                $itemName = 'Donasi Umum';
+                if ($item->kampanye) {
+                    $itemName = $item->kampanye->judul;
+                } elseif ($item->pesan && stripos($item->pesan, '[Zakat') !== false) {
+                    if (stripos($item->pesan, 'Profesi') !== false) {
+                        $itemName = 'Zakat Profesi';
+                    } elseif (stripos($item->pesan, 'Maal') !== false) {
+                        $itemName = 'Zakat Maal';
+                    } elseif (stripos($item->pesan, 'Fitrah') !== false) {
+                        $itemName = 'Zakat Fitrah';
+                    } else {
+                        $itemName = 'Zakat';
+                    }
+                }
+
                 $itemDetails[] = [
                     'id' => $donasi->id,
                     'price' => $item->nominal,
                     'quantity' => 1,
-                    'name' => 'Donasi '.($item->kampanye ? Str::limit($item->kampanye->judul, 30) : 'Umum'),
+                    'name' => Str::limit($itemName, 50),
                 ];
             }
 
             // Integrasi Midtrans
-            $midtransService = new MidtransService;
+            $midtransService = app(MidtransService::class);
             $midtransData = $midtransService->createTransaction([
                 'transaction_details' => [
                     'order_id' => $paymentGroupId, // 1 ID Induk untuk semua item
