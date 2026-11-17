@@ -28,6 +28,10 @@ use App\Http\Controllers\Api\TransaksiKeuanganController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// Endpoint publik untuk Kunjungan
+Route::get('/kunjungan/ketersediaan', [KunjunganController::class, 'ketersediaan']);
+Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
+
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:public-forms');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
@@ -152,10 +156,6 @@ Route::get('/galeri/{id}', [GaleriController::class, 'show']);
 
 // Endpoint publik untuk Kebutuhan Logistik Mendesak (Inventaris Stok Menipis)
 Route::get('/kebutuhan-mendesak', [InventarisController::class, 'mendesak']);
-
-// Endpoint publik untuk Kunjungan
-Route::get('/kunjungan/ketersediaan', [KunjunganController::class, 'ketersediaan']);
-Route::post('/kunjungan', [KunjunganController::class, 'store'])->middleware('throttle:public-forms');
 
 // Endpoint publik untuk mendapatkan kontak admin utama
 Route::get('/kontak-utama', [ProfileController::class, 'kontakUtama']);
