@@ -113,15 +113,7 @@ class OrangTuaAsuhController extends Controller
                 $q->latest('tanggal_kejadian');
             }
         ])
-            ->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-                if (! empty($user->email)) {
-                    $q->orWhere('email', $user->email);
-                }
-                if (! empty($user->no_hp)) {
-                    $q->orWhere('no_hp', $user->no_hp);
-                }
-            })
+            ->where('user_id', $user->id)
             ->latest()
             ->get();
 
@@ -151,19 +143,14 @@ class OrangTuaAsuhController extends Controller
                 foreach ($validated['items'] as $item) {
                     $exists = OrangTuaAsuh::where('anak_asuh_id', $item['anak_asuh_id'])
                         ->where('status', 'Aktif')
-                        ->where(function ($q) use ($user) {
-                            $q->where('user_id', $user->id);
-                            if (! empty($user->email)) {
-                                $q->orWhere('email', $user->email);
-                            }
-                        })
+                        ->where('user_id', $user->id)
                         ->exists();
 
                     if (! $exists) {
                         $pota = OrangTuaAsuh::create([
                             'user_id' => $user->id,
                             'nama_donatur' => $user->name,
-                            'no_hp' => $user->no_hp ?: '-',
+                            'no_hp' => $user->no_hp ?: '',
                             'email' => $user->email,
                             'anak_asuh_id' => $item['anak_asuh_id'],
                             'nominal_bulanan' => $item['nominal_bulanan'],
@@ -191,12 +178,7 @@ class OrangTuaAsuhController extends Controller
         // Cek apakah donatur ini sudah menjadi orang tua asuh untuk anak ini dan masih aktif
         $exists = OrangTuaAsuh::where('anak_asuh_id', $validated['anak_asuh_id'])
             ->where('status', 'Aktif')
-            ->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-                if (! empty($user->email)) {
-                    $q->orWhere('email', $user->email);
-                }
-            })
+            ->where('user_id', $user->id)
             ->exists();
 
         if ($exists) {
@@ -206,7 +188,7 @@ class OrangTuaAsuhController extends Controller
         $pota = OrangTuaAsuh::create([
             'user_id' => $user->id,
             'nama_donatur' => $user->name,
-            'no_hp' => $user->no_hp ?: '-',
+            'no_hp' => $user->no_hp ?: '',
             'email' => $user->email,
             'anak_asuh_id' => $validated['anak_asuh_id'],
             'nominal_bulanan' => $validated['nominal_bulanan'],
