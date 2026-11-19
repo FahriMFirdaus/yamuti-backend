@@ -15,10 +15,15 @@ php artisan package:discover --ansi || true
 php artisan storage:link || true
 php artisan optimize:clear || true
 
-# Jalankan migrasi jika database terhubung
+# Jalankan migrasi & seeder jika database terhubung
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "==> Menjalankan migrasi database..."
     php artisan migrate --force || true
+
+    if [ "$RUN_SEEDERS" = "true" ]; then
+        echo "==> Menjalankan database seeder..."
+        php artisan db:seed --force || true
+    fi
 fi
 
 # Cache config & routes di production
