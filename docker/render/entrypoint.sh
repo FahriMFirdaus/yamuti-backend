@@ -3,6 +3,9 @@ set -e
 
 echo "==> Memulai konfigurasi runtime Laravel..."
 
+# Jalankan package discovery jika belum
+php artisan package:discover --ansi || true
+
 # Generate cache & storage symlink
 php artisan storage:link || true
 php artisan optimize:clear || true

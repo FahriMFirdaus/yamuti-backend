@@ -36,11 +36,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy source code
+# Copy source code (vendor and .env excluded via .dockerignore)
 COPY . /var/www
 
-# Install Composer dependencies (production)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install Composer dependencies (production) without scripts first
+RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction
 
 # Configure Nginx for Render
 RUN mkdir -p /run/nginx
