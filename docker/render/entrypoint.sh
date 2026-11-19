@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+echo "==> Memperbaiki permission storage & bootstrap/cache..."
+mkdir -p /var/www/storage/logs /var/www/storage/framework/sessions /var/www/storage/framework/views /var/www/storage/framework/cache
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+chmod -R 777 /var/www/storage /var/www/bootstrap/cache
+
 echo "==> Memulai konfigurasi runtime Laravel..."
 
 # Jalankan package discovery jika belum
