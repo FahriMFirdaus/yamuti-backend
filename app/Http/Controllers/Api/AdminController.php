@@ -101,9 +101,23 @@ class AdminController extends Controller
         return $this->successResponse($admin->load('roles'), 'Data admin berhasil diperbarui');
     }
 
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request, $id): JsonResponse
     {
         $admin = User::findOrFail($id);
+
+        // Cegah menghapus akun sendiri
+        if ($admin->id === $request->user()?->id) {
+            return $this->errorResponse('Anda tidak dapat menghapus akun Anda sendiri.', 422);
+        }
+
+        // Cegah menghapus super admin terakhir
+        if ($admin->hasRole('super_admin')) {
+            $superAdminCount = User::role('super_admin')->count();
+            if ($superAdminCount <= 1) {
+                return $this->errorResponse('Akun Super Admin terakhir tidak boleh dihapus untuk mencegah penguncian sistem.', 422);
+            }
+        }
+
         $admin->delete();
 
         return $this->successResponse(null, 'Akses admin berhasil dihapus');

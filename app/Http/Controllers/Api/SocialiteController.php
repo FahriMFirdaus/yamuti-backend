@@ -47,12 +47,12 @@ class SocialiteController extends Controller
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+            $frontendUrl = config('services.frontend_url', 'http://localhost:3000');
 
             return redirect()->away($frontendUrl.'/auth/callback?token='.$token);
 
         } catch (\Exception $e) {
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+            $frontendUrl = config('services.frontend_url', 'http://localhost:3000');
 
             return redirect()->away($frontendUrl.'/auth/login?error=google_auth_failed');
         }

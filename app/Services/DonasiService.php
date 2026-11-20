@@ -18,11 +18,24 @@ class DonasiService extends BaseService
     {
         $this->accountingService = $accountingService;
     }
-    public function getAllDonasi(int $perPage = 15): LengthAwarePaginator
+    public function getAllDonasi(int $perPage = 15, ?string $search = null, ?string $status = null): LengthAwarePaginator
     {
-        return Donasi::with(['kampanye:id,judul,slug', 'user:id,name,email'])
-            ->latest()
-            ->paginate($perPage);
+        $query = Donasi::with(['kampanye:id,judul,slug', 'user:id,name,email']);
+
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_donatur', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%")
+                    ->orWhere('order_id', 'like', "%{$search}%")
+                    ->orWhere('no_hp', 'like', "%{$search}%");
+            });
+        }
+
+        if (! empty($status) && $status !== 'ALL') {
+            $query->where('status', strtoupper($status));
+        }
+
+        return $query->latest()->paginate($perPage);
     }
 
     public function getDonasiById(string $id): Donasi

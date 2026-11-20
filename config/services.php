@@ -46,8 +46,10 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', env('FRONTEND_URL').'/auth/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('FRONTEND_URL', 'http://localhost:3000').'/auth/callback'),
     ],
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
 
     'fonnte' => [
         'token' => env('FONNTE_TOKEN'),

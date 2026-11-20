@@ -22,8 +22,11 @@ class AnakAsuhController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->query('per_page', 15);
-        $data = $this->anakAsuhService->getAllAnakAsuh((int) $perPage);
+        $perPage = (int) $request->query('per_page', 15);
+        $search = $request->query('search') ?: $request->query('q');
+        $status = $request->query('status');
+
+        $data = $this->anakAsuhService->getAllAnakAsuh($perPage, $search, $status);
 
         return $this->successResponse($data, 'Data anak asuh berhasil diambil');
     }

@@ -49,6 +49,14 @@ class RoleController extends Controller
 
     public function destroy($id): JsonResponse
     {
+        $role = $this->roleService->getRoleById($id);
+
+        // Lindungi role inti sistem dari penghapusan
+        $protectedRoles = ['super_admin', 'admin', 'donatur'];
+        if (in_array(strtolower($role->name), $protectedRoles)) {
+            return $this->errorResponse("Role inti '{$role->name}' dilindungi sistem dan tidak boleh dihapus.", 422);
+        }
+
         $this->roleService->deleteRole($id);
 
         return $this->successResponse(null, 'Role berhasil dihapus');

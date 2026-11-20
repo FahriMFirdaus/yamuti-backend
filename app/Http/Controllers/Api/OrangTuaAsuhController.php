@@ -157,12 +157,16 @@ class OrangTuaAsuhController extends Controller
             $created = [];
             \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $user, &$created) {
                 foreach ($validated['items'] as $item) {
-                    $exists = OrangTuaAsuh::where('anak_asuh_id', $item['anak_asuh_id'])
+                    $anak = \App\Models\AnakAsuh::lockForUpdate()->find($item['anak_asuh_id']);
+                    if (! $anak) continue;
+
+                    // Validasi: Cek apakah donatur ini sudah mendaftar anak ini
+                    $existsSelf = OrangTuaAsuh::where('anak_asuh_id', $item['anak_asuh_id'])
                         ->where('status', 'Aktif')
                         ->where('user_id', $user->id)
                         ->exists();
 
-                    if (! $exists) {
+                    if (! $existsSelf) {
                         $pota = OrangTuaAsuh::create([
                             'user_id' => $user->id,
                             'nama_donatur' => $user->name,

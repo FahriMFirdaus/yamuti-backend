@@ -58,21 +58,25 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Data Pemasukan 7 Hari Terakhir
+        // Data Pemasukan 7 Hari Terakhir (Dioptimalkan dengan 1 single query agregasi range tanggal)
+        $sevenDaysAgo = now()->subDays(6)->startOfDay();
+        $donasiAggregates = Donasi::where('status', 'PAID')
+            ->where('created_at', '>=', $sevenDaysAgo)
+            ->selectRaw('DATE(created_at) as tgl, SUM(gross_amount) as total')
+            ->groupBy('tgl')
+            ->pluck('total', 'tgl')
+            ->toArray();
+
         $chartHarian = [];
         for ($i = 6; $i >= 0; $i--) {
             $carbon = now()->subDays($i);
             $date = $carbon->format('Y-m-d');
             $dayLabel = $carbon->translatedFormat('D');
 
-            $nominalHarian = Donasi::where('status', 'PAID')
-                ->whereDate('created_at', $date)
-                ->sum('gross_amount');
-
             $chartHarian[] = [
                 'tanggal' => $date,
                 'hari' => $dayLabel,
-                'nominal' => (float) $nominalHarian,
+                'nominal' => (float) ($donasiAggregates[$date] ?? 0),
             ];
         }
 

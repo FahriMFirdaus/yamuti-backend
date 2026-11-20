@@ -23,7 +23,11 @@ class DonasiController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $data = $this->donasiService->getAllDonasi((int) $request->query('per_page', 15));
+        $perPage = (int) $request->query('per_page', 15);
+        $search = $request->query('search') ?: $request->query('q');
+        $status = $request->query('status');
+
+        $data = $this->donasiService->getAllDonasi($perPage, $search, $status);
 
         return $this->successResponse($data, 'Data donasi berhasil diambil');
     }

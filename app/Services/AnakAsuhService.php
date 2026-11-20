@@ -8,11 +8,23 @@ use Illuminate\Support\Facades\Storage;
 
 class AnakAsuhService extends BaseService
 {
-    public function getAllAnakAsuh(int $perPage = 15): LengthAwarePaginator
+    public function getAllAnakAsuh(int $perPage = 15, ?string $search = null, ?string $status = null): LengthAwarePaginator
     {
-        return AnakAsuh::with(['orangTuaAsuh', 'records'])
-            ->latest()
-            ->paginate($perPage);
+        $query = AnakAsuh::with(['orangTuaAsuh', 'records']);
+
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%")
+                    ->orWhere('asal_kota', 'like', "%{$search}%");
+            });
+        }
+
+        if (! empty($status) && $status !== 'ALL') {
+            $query->where('status', $status);
+        }
+
+        return $query->latest()->paginate($perPage);
     }
 
     public function getAnakAsuhById(string $id): AnakAsuh
