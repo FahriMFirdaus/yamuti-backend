@@ -46,7 +46,7 @@ class MidtransWebhookController extends Controller
             return response()->json(['message' => 'Status ignored']);
         }
 
-        if (str_starts_with($orderId, 'GRP-')) {
+        if (str_starts_with($orderId, 'GRP-') || str_starts_with($orderId, 'POTA-')) {
             $donasis = Donasi::where('payment_group_id', $orderId)->get();
             foreach ($donasis as $donasi) {
                 if ($status === 'PAID') {

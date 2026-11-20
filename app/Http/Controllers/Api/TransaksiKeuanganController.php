@@ -132,6 +132,33 @@ class TransaksiKeuanganController extends Controller
         return $this->successResponse($transaksi, 'Laporan keuangan berhasil diambil');
     }
 
+    public function show($id): JsonResponse
+    {
+        $transaksi = TransaksiKeuangan::with('creator')->findOrFail($id);
+        return $this->successResponse($transaksi, 'Detail transaksi keuangan berhasil diambil');
+    }
+
+    public function destroy($id): JsonResponse
+    {
+        return DB::transaction(function () use ($id) {
+            $transaksi = TransaksiKeuangan::findOrFail($id);
+
+            // Hapus Jurnal Umum terkait jika ada
+            $jurnal = \App\Models\JurnalUmum::where('referensi_id', $transaksi->id)
+                ->where('tipe_referensi', 'transaksi_keuangan')
+                ->first();
+
+            if ($jurnal) {
+                $jurnal->items()->delete();
+                $jurnal->delete();
+            }
+
+            $transaksi->delete();
+
+            return $this->successResponse(null, 'Transaksi keuangan berhasil dihapus dan jurnal disinkronkan');
+        });
+    }
+
     public function update(Request $request, $id): JsonResponse
     {
         $validated = $request->validate([
@@ -139,16 +166,41 @@ class TransaksiKeuanganController extends Controller
             'status' => 'nullable|string',
         ]);
 
-        $transaksi = TransaksiKeuangan::findOrFail($id);
+        return DB::transaction(function () use ($validated, $id) {
+            $transaksi = TransaksiKeuangan::findOrFail($id);
 
-        // Hapus tanda "DRAFT: " dari deskripsi jika sebelumnya berupa draft
-        $deskripsi = str_replace('DRAFT: ', '', $transaksi->deskripsi);
+            // Hapus tanda "DRAFT: " dari deskripsi jika sebelumnya berupa draft
+            $deskripsi = str_replace('DRAFT: ', '', $transaksi->deskripsi);
+            $newNominal = (float) $validated['amountRaw'];
 
-        $transaksi->update([
-            'nominal' => $validated['amountRaw'],
-            'deskripsi' => $deskripsi,
-        ]);
+            $transaksi->update([
+                'nominal' => $newNominal,
+                'deskripsi' => $deskripsi,
+            ]);
 
-        return $this->successResponse($transaksi, 'Transaksi keuangan berhasil diperbarui dan disahkan');
+            // Sinkronkan ke Jurnal Umum terkait
+            $jurnal = \App\Models\JurnalUmum::where('referensi_id', $transaksi->id)
+                ->where('tipe_referensi', 'transaksi_keuangan')
+                ->first();
+
+            if ($jurnal) {
+                $jurnal->update([
+                    'total_debit' => $newNominal,
+                    'total_kredit' => $newNominal,
+                    'keterangan' => $deskripsi,
+                ]);
+
+                foreach ($jurnal->items as $item) {
+                    if ($item->debit > 0) {
+                        $item->update(['debit' => $newNominal]);
+                    }
+                    if ($item->kredit > 0) {
+                        $item->update(['kredit' => $newNominal]);
+                    }
+                }
+            }
+
+            return $this->successResponse($transaksi, 'Transaksi keuangan dan jurnal akuntansi berhasil diperbarui dan disahkan');
+        });
     }
 }

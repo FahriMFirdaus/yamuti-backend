@@ -102,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/payroll/summary', [PayrollController::class, 'summary']);
         Route::post('/payroll/generate-bulk', [PayrollController::class, 'generateBulk']);
         Route::post('/payroll/generate-periode', [PayrollController::class, 'generateBulk']);
+        Route::post('/payroll/pay-bulk', [PayrollController::class, 'payBulk']);
         Route::post('/payroll/{id}/approve', [PayrollController::class, 'approve']);
         Route::post('/payroll/{id}/pay', [PayrollController::class, 'pay']);
         Route::get('/payroll/{id}/slip', [PayrollController::class, 'slip']);

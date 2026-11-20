@@ -148,6 +148,26 @@ class AccountingController extends Controller
 
         $account = ChartOfAccount::findOrFail($accountId);
 
+        // Hitung Saldo Awal (Opening Balance) sebelum $startDate untuk akun riil (Aset, Kewajiban, Aset Neto)
+        $openingBalance = 0;
+        if (in_array($account->tipe_akun, ['Aset', 'Kewajiban', 'Aset Neto'])) {
+            $priorDebit = JurnalItem::where('chart_of_account_id', $accountId)
+                ->whereHas('jurnal', function ($q) use ($startDate) {
+                    $q->whereDate('tanggal_transaksi', '<', $startDate);
+                })->sum('debit');
+
+            $priorKredit = JurnalItem::where('chart_of_account_id', $accountId)
+                ->whereHas('jurnal', function ($q) use ($startDate) {
+                    $q->whereDate('tanggal_transaksi', '<', $startDate);
+                })->sum('kredit');
+
+            if ($account->saldo_normal === 'Debit') {
+                $openingBalance = $priorDebit - $priorKredit;
+            } else {
+                $openingBalance = $priorKredit - $priorDebit;
+            }
+        }
+
         $items = JurnalItem::with('jurnal')
             ->where('chart_of_account_id', $accountId)
             ->whereHas('jurnal', function ($q) use ($startDate, $endDate) {
@@ -159,7 +179,7 @@ class AccountingController extends Controller
             ->select('jurnal_items.*')
             ->get();
 
-        $runningBalance = 0;
+        $runningBalance = $openingBalance;
         $ledger = $items->map(function ($item) use (&$runningBalance, $account) {
             if ($account->saldo_normal === 'Debit') {
                 $runningBalance += ($item->debit - $item->kredit);
@@ -182,6 +202,7 @@ class AccountingController extends Controller
             'account' => $account,
             'start_date' => $startDate,
             'end_date' => $endDate,
+            'opening_balance' => $openingBalance,
             'entries' => $ledger,
             'ending_balance' => $runningBalance,
         ], 'Buku Besar berhasil diambil');

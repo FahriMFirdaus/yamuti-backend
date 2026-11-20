@@ -442,7 +442,7 @@ class PayrollController extends Controller
             ]);
 
             // Auto-post ISAK 35 Journal via AccountingService
-            $jurnal = $this->accountingService->recordPayrollJournal(
+            $this->accountingService->recordPayrollJournal(
                 $payroll,
                 $kodeKas,
                 $tglBayar,
@@ -458,6 +458,69 @@ class PayrollController extends Controller
             ]);
 
             return $this->successResponse($payroll, 'Payroll berhasil dibayarkan dan jurnal akuntansi ISAK 35 telah dicatat');
+        });
+    }
+
+    /**
+     * Batch / Bulk pay multiple payrolls in single atomic transaction.
+     */
+    public function payBulk(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'payroll_ids' => 'required|array|min:1',
+            'payroll_ids.*' => 'required|uuid|exists:payrolls,id',
+            'metode_pembayaran' => 'nullable|in:Transfer Bank,Kas Tunai',
+            'kas_bank_akun_id' => 'nullable|uuid|exists:chart_of_accounts,id',
+            'tanggal_pembayaran' => 'nullable|date',
+            'catatan' => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($validated, $request) {
+            $payrolls = Payroll::lockForUpdate()->whereIn('id', $validated['payroll_ids'])->get();
+            $paidCount = 0;
+            $tglBayar = $validated['tanggal_pembayaran'] ?? now()->toDateString();
+            $metode = $validated['metode_pembayaran'] ?? 'Transfer Bank';
+
+            $kasAkunId = $validated['kas_bank_akun_id'] ?? null;
+            $kodeKas = '1-1003';
+            if (! empty($kasAkunId)) {
+                $acc = ChartOfAccount::find($kasAkunId);
+                if ($acc) $kodeKas = $acc->kode_akun;
+            } else {
+                if (str_contains(strtolower($metode), 'tunai')) $kodeKas = '1-1001';
+                $acc = ChartOfAccount::where('kode_akun', $kodeKas)->first();
+                if ($acc) $kasAkunId = $acc->id;
+            }
+
+            foreach ($payrolls as $payroll) {
+                if ($payroll->status === 'Dibayar') {
+                    continue; // Skip already paid
+                }
+
+                $payroll->update([
+                    'status' => 'Dibayar',
+                    'metode_pembayaran' => $metode,
+                    'kas_bank_akun_id' => $kasAkunId,
+                    'tanggal_pembayaran' => $tglBayar,
+                    'dibayar_oleh' => $request->user()?->id,
+                    'dibayar_pada' => now(),
+                    'catatan' => $validated['catatan'] ?? $payroll->catatan,
+                    'updated_by' => $request->user()?->id,
+                ]);
+
+                $this->accountingService->recordPayrollJournal(
+                    $payroll,
+                    $kodeKas,
+                    $tglBayar,
+                    $request->user()?->id
+                );
+
+                $paidCount++;
+            }
+
+            return $this->successResponse([
+                'processed_count' => $paidCount,
+            ], "{$paidCount} payroll berhasil dicairkan dan dibukukan ke jurnal akuntansi secara serentak");
         });
     }
 

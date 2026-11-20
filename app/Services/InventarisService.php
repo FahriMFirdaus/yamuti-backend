@@ -50,11 +50,31 @@ class InventarisService extends BaseService
 
     public function updateInventaris(string $id, array $data, string $userId): Inventaris
     {
-        $inventaris = Inventaris::findOrFail($id);
-        $data['updated_by'] = $userId;
-        $inventaris->update($data);
+        return DB::transaction(function () use ($id, $data, $userId) {
+            $inventaris = Inventaris::findOrFail($id);
+            $oldStok = $inventaris->stok_sekarang;
+            $newStok = isset($data['stok_sekarang']) ? (int) $data['stok_sekarang'] : $oldStok;
 
-        return $inventaris;
+            $data['updated_by'] = $userId;
+            $inventaris->update($data);
+
+            // Jika stok berubah, catat riwayat mutasi barang otomatis
+            if ($newStok !== $oldStok) {
+                $selisih = abs($newStok - $oldStok);
+                $tipe = $newStok > $oldStok ? 'masuk' : 'keluar';
+
+                MutasiBarang::create([
+                    'inventaris_id' => $inventaris->id,
+                    'tipe' => $tipe,
+                    'jumlah' => $selisih,
+                    'keterangan' => 'Penyesuaian stok inventaris oleh admin (dari ' . $oldStok . ' menjadi ' . $newStok . ')',
+                    'tanggal_mutasi' => now(),
+                    'created_by' => $userId,
+                ]);
+            }
+
+            return $inventaris;
+        });
     }
 
     public function deleteInventaris(string $id): bool

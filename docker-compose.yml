@@ -39,7 +39,7 @@ services:
         GID: ${GID:-1000}
     container_name: yamuti_backend_worker
     restart: unless-stopped
-    command: php artisan queue:work --tries=3 --timeout=90
+    command: php artisan queue:work --queue=high,default,low --tries=3 --timeout=90
     volumes:
       - .:/var/www
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
