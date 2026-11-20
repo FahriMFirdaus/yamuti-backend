@@ -111,11 +111,27 @@ class OrangTuaAsuhController extends Controller
             'anakAsuh:id,nama,nik,jenis_kelamin,tanggal_lahir,tempat_lahir,tingkat_pendidikan,nama_sekolah,status,foto_identitas,status_keluarga,keterangan,tinggi_badan,berat_badan,riwayat_penyakit,status_imunisasi',
             'anakAsuh.records' => function ($q) {
                 $q->latest('tanggal_kejadian');
+            },
+            'donasis' => function ($q) {
+                $q->where('status', 'PAID')
+                    ->latest();
             }
         ])
             ->where('user_id', $user->id)
             ->latest()
             ->get();
+
+        // Hitung status lunas bulan berjalan untuk tiap ananda binaan
+        $now = now();
+        $data->each(function ($pota) use ($now) {
+            $paidThisMonth = $pota->donasis->first(function ($d) use ($now) {
+                return $d->created_at && $d->created_at->month === $now->month && $d->created_at->year === $now->year;
+            });
+
+            $pota->is_paid_this_month = (bool) $paidThisMonth;
+            $pota->status_bulan_ini = $paidThisMonth ? 'lunas' : 'menunggu';
+            $pota->last_paid_at = $paidThisMonth ? $paidThisMonth->created_at->toIso8601String() : null;
+        });
 
         return $this->successResponse($data, 'Data anak asuh binaan berhasil diambil');
     }
@@ -218,5 +234,106 @@ class OrangTuaAsuhController extends Controller
             ->get();
 
         return $this->successResponse($data, 'Daftar calon anak asuh binaan berhasil diambil');
+    }
+
+    /**
+     * Endpoint untuk membayar beasiswa POTA secara kolektif untuk banyak anak asuh sekaligus.
+     * Membuat donasi terpisah per anak dengan payment_group_id yang sama dan mengembalikan 1 snap_token Midtrans.
+     */
+    public function bayarKolektif(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'pota_ids' => 'required|array|min:1',
+            'pota_ids.*' => 'required|exists:orang_tua_asuhs,id',
+            'total_nominal' => 'required|numeric|min:10000',
+            'pesan_doa' => 'nullable|string|max:500',
+        ]);
+
+        $potasList = OrangTuaAsuh::with('anakAsuh')
+            ->whereIn('id', $validated['pota_ids'])
+            ->where('user_id', $user->id)
+            ->get();
+
+        if ($potasList->isEmpty()) {
+            return $this->errorResponse('Tidak ada data komitmen anak asuh yang valid.', 404);
+        }
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($potasList, $validated, $user) {
+            $paymentGroupId = 'POTA-'.\Illuminate\Support\Str::uuid()->toString();
+            $totalAmount = (float) $validated['total_nominal'];
+            $count = $potasList->count();
+
+            // Bagikan nominal secara proporsional atau merata per anak
+            $perChildAmount = floor($totalAmount / $count);
+            $remainder = $totalAmount - ($perChildAmount * $count);
+
+            $itemDetails = [];
+            $donasis = [];
+
+            foreach ($potasList as $index => $pota) {
+                // Tambahkan sisa pembulatan ke item pertama
+                $childNominal = $perChildAmount + ($index === 0 ? $remainder : 0);
+                $namaAnak = $pota->anakAsuh?->nama ?? 'Anak Asuh';
+
+                $donasi = \App\Models\Donasi::create([
+                    'payment_group_id' => $paymentGroupId,
+                    'user_id' => $user->id,
+                    'orang_tua_asuh_id' => $pota->id,
+                    'nama_donatur' => $user->name,
+                    'no_whatsapp' => $user->no_hp ?: '',
+                    'pesan' => "[Beasiswa Rutin POTA - Ananda {$namaAnak}] ".($validated['pesan_doa'] ?? ''),
+                    'gross_amount' => $childNominal,
+                    'status' => 'PENDING',
+                    'is_anonymous' => false,
+                ]);
+
+                $donasis[] = $donasi;
+
+                $itemDetails[] = [
+                    'id' => $donasi->id,
+                    'price' => (int) $childNominal,
+                    'quantity' => 1,
+                    'name' => \Illuminate\Support\Str::limit("Beasiswa POTA: {$namaAnak}", 50),
+                ];
+            }
+
+            // Integrasi Midtrans dengan Order ID = payment_group_id
+            $midtransService = app(\App\Services\MidtransService::class);
+            $midtransData = $midtransService->createTransaction([
+                'transaction_details' => [
+                    'order_id' => $paymentGroupId,
+                    'gross_amount' => $totalAmount,
+                ],
+                'item_details' => $itemDetails,
+                'customer_details' => [
+                    'first_name' => $user->name,
+                    'phone' => $user->no_hp ?: '',
+                    'email' => $user->email,
+                ],
+            ]);
+
+            \App\Models\Donasi::where('payment_group_id', $paymentGroupId)->update([
+                'snap_token' => $midtransData['snap_token'],
+                'payment_url' => $midtransData['payment_url'],
+            ]);
+
+            // Kirim notifikasi WhatsApp jika user memiliki nomor WhatsApp
+            if ($user->no_hp) {
+                $formattedAmount = 'Rp'.number_format($totalAmount, 0, ',', '.');
+                $names = $potasList->map(fn ($p) => $p->anakAsuh?->nama)->filter()->join(', ');
+                $pesan = "Halo kak *{$user->name}*,\n\nTerima kasih telah mengajukan pembayaran beasiswa kolektif POTA untuk {$count} ananda ({$names}) sebesar *{$formattedAmount}*.\n\nKode Tagihan: *#{$paymentGroupId}*\nStatus: *Menunggu Pembayaran*\n\nSilakan selesaikan pembayaran melalui tautan berikut:\n{$midtransData['payment_url']}\n\nJazakumullah khairan katsiran.";
+                \App\Jobs\SendWhatsAppMessage::dispatch($user->no_hp, $pesan);
+            }
+
+            return $this->successResponse([
+                'payment_group_id' => $paymentGroupId,
+                'snap_token' => $midtransData['snap_token'],
+                'payment_url' => $midtransData['payment_url'],
+                'total_amount' => $totalAmount,
+                'items_count' => $count,
+            ], 'Tagihan pembayaran beasiswa kolektif POTA berhasil dibuat.');
+        });
     }
 }

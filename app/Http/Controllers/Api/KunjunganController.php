@@ -117,25 +117,27 @@ class KunjunganController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|string|in:APPROVED,REJECTED,COMPLETED',
+            'catatan_admin' => 'nullable|string|max:1000',
         ]);
 
         $status = strtoupper($validated['status']);
+        $catatanAdmin = $validated['catatan_admin'] ?? null;
         $adminId = $request->user()->id;
 
         if ($status === 'APPROVED') {
-            $data = $this->kunjunganService->approveKunjungan($id, $adminId);
+            $data = $this->kunjunganService->approveKunjungan($id, $adminId, $catatanAdmin);
 
             return $this->successResponse($data, 'Kunjungan disetujui');
         } elseif ($status === 'REJECTED') {
-            $data = $this->kunjunganService->rejectKunjungan($id, $adminId);
+            $data = $this->kunjunganService->rejectKunjungan($id, $adminId, $catatanAdmin);
 
             return $this->successResponse($data, 'Kunjungan ditolak');
         } else {
-            // Jika ada status COMPLETED dll, bisa diarahkan ke update standar
-            // Untuk sementara kita panggil fungsi approve/reject, atau update model langsung jika ada fungsi di service
-            // Untuk COMPLETED kita harus update manual jika belum ada di service:
             $kunjungan = Kunjungan::findOrFail($id);
-            $kunjungan->update(['status' => $status]);
+            $kunjungan->update([
+                'status' => $status,
+                'catatan_admin' => $catatanAdmin,
+            ]);
 
             return $this->successResponse($kunjungan, "Kunjungan diperbarui menjadi $status");
         }

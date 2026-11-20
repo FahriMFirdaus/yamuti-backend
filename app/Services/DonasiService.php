@@ -12,6 +12,12 @@ use Illuminate\Support\Str;
 
 class DonasiService extends BaseService
 {
+    protected AccountingService $accountingService;
+
+    public function __construct(AccountingService $accountingService)
+    {
+        $this->accountingService = $accountingService;
+    }
     public function getAllDonasi(int $perPage = 15): LengthAwarePaginator
     {
         return Donasi::with(['kampanye:id,judul,slug', 'user:id,name,email'])
@@ -30,12 +36,19 @@ class DonasiService extends BaseService
         $data['user_id'] = $userId;
         $data['status'] = 'PENDING';
 
+        // Jika donatur memilih transfer manual dan mengunggah bukti transfer
+        $isManualTransfer = isset($data['payment_type']) && strtoupper($data['payment_type']) === 'MANUAL_TRANSFER';
+
         $donasi = Donasi::create($data);
         $donasi->loadMissing('kampanye');
 
         $itemName = 'Donasi Umum';
         if ($donasi->kampanye) {
             $itemName = $donasi->kampanye->judul;
+        } elseif (! empty($donasi->orang_tua_asuh_id)) {
+            $donasi->loadMissing('orangTuaAsuh.anakAsuh');
+            $namaAnak = $donasi->orangTuaAsuh?->anakAsuh?->nama ?? 'Anak Asuh';
+            $itemName = "Beasiswa POTA: {$namaAnak}";
         } elseif ($donasi->pesan && stripos($donasi->pesan, '[Zakat') !== false) {
             if (stripos($donasi->pesan, 'Profesi') !== false) {
                 $itemName = 'Zakat Profesi';
@@ -48,7 +61,18 @@ class DonasiService extends BaseService
             }
         }
 
-        // Integrasi Midtrans
+        // Jika transfer manual dengan bukti transfer, tidak perlu generate Midtrans token
+        if ($isManualTransfer && ! empty($donasi->bukti_transfer)) {
+            if ($donasi->no_whatsapp) {
+                $formattedAmount = 'Rp'.number_format($donasi->gross_amount, 0, ',', '.');
+                $pesan = "Halo kak *{$donasi->nama_donatur}*,\n\nTerima kasih, bukti transfer donasi Anda sebesar *{$formattedAmount}* ({$itemName}) telah kami terima.\n\nNomor Transaksi: *#{$donasi->id}*\nStatus: *Menunggu Verifikasi Admin*\n\nPengurus yayasan akan segera memverifikasi mutasi rekening Anda. Semoga Allah membalas kebaikan Anda sekeluarga.";
+                SendWhatsAppMessage::dispatch($donasi->no_whatsapp, $pesan);
+            }
+
+            return $donasi;
+        }
+
+        // Integrasi Midtrans untuk pembayaran online otomatis
         $midtransService = app(MidtransService::class);
         $midtransData = $midtransService->createTransaction([
             'transaction_details' => [
@@ -74,6 +98,13 @@ class DonasiService extends BaseService
             'payment_url' => $midtransData['payment_url'],
         ]);
 
+        // Kirim notifikasi WA tahap 1 (PENDING: instruksi bayar)
+        if ($donasi->no_whatsapp) {
+            $formattedAmount = 'Rp'.number_format($donasi->gross_amount, 0, ',', '.');
+            $pesan = "Halo kak *{$donasi->nama_donatur}*,\n\nTerima kasih atas niat baik Anda untuk berdonasi sebesar *{$formattedAmount}* ({$itemName}) melalui YAMUTI.\n\nNomor Transaksi: *#{$donasi->id}*\nStatus: *Menunggu Pembayaran*\n\nSilakan selesaikan pembayaran melalui tautan berikut:\n{$donasi->payment_url}\n\nSemoga Allah membalas kebaikan Anda sekeluarga.";
+            SendWhatsAppMessage::dispatch($donasi->no_whatsapp, $pesan);
+        }
+
         return $donasi;
     }
 
@@ -86,9 +117,14 @@ class DonasiService extends BaseService
 
         $donasi = Donasi::create($data);
 
-        // Karena langsung PAID, jalankan split rule
+        // Karena langsung PAID, jalankan split rule & pencatatan jurnal akuntansi
         $donasi->update(['status' => 'PAID']);
         $this->applySplitRule($donasi);
+        try {
+            $this->accountingService->recordDonasiJournal($donasi);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal auto-journal donasi: ' . $e->getMessage());
+        }
 
         // Kirim notifikasi WA
         if ($donasi->no_whatsapp) {
@@ -108,6 +144,11 @@ class DonasiService extends BaseService
             if ($donasi->status !== 'PAID' && $status === 'PAID') {
                 $donasi->update(['status' => 'PAID']);
                 $this->applySplitRule($donasi);
+                try {
+                    $this->accountingService->recordDonasiJournal($donasi);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Gagal auto-journal donasi: ' . $e->getMessage());
+                }
 
                 // Kirim notifikasi WA
                 if ($donasi->no_whatsapp) {

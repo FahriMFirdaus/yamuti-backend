@@ -3,30 +3,28 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppMessage;
 use App\Models\Donasi;
 use App\Models\Kunjungan;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class BroadcastController extends Controller
 {
     use ApiResponse;
 
-    public function send(Request $request): JsonResponse
+    /**
+     * Helper untuk mengumpulkan dan menstandarisasi nomor telepon unik dari target penerima.
+     */
+    protected function getTargetNumbers(string $targetPenerima): array
     {
-        $validated = $request->validate([
-            'pesan' => 'required|string',
-            'target_penerima' => 'required|in:donatur,kunjungan,semua',
-        ]);
-
         $targets = collect();
 
-        // Mode Operasional Nyata
-        if ($validated['target_penerima'] === 'donatur' || $validated['target_penerima'] === 'semua') {
+        if ($targetPenerima === 'donatur' || $targetPenerima === 'semua') {
             // 1. Ambil nomor dari orang yang pernah berdonasi
             $donatursDariTransaksi = Donasi::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
             $targets = $targets->merge($donatursDariTransaksi);
@@ -36,19 +34,19 @@ class BroadcastController extends Controller
             $targets = $targets->merge($donatursTerdaftar);
         }
 
-        if ($validated['target_penerima'] === 'kunjungan' || $validated['target_penerima'] === 'semua') {
+        if ($targetPenerima === 'kunjungan' || $targetPenerima === 'semua') {
             $kunjungans = Kunjungan::whereNotNull('no_whatsapp')->pluck('no_whatsapp');
             $targets = $targets->merge($kunjungans);
         }
 
-        if ($validated['target_penerima'] === 'semua') {
+        if ($targetPenerima === 'semua') {
             $users = User::whereNotNull('no_hp')->pluck('no_hp');
             $targets = $targets->merge($users);
         }
 
-        // Bersihkan dan standarisasi nomor HP
-        $validNumbers = $targets->map(function ($num) {
-            $cleaned = preg_replace('/[^0-9]/', '', $num);
+        // Bersihkan dan standarisasi nomor HP ke format 62xxx
+        return $targets->map(function ($num) {
+            $cleaned = preg_replace('/[^0-9]/', '', (string) $num);
             if (str_starts_with($cleaned, '0')) {
                 return '62'.substr($cleaned, 1);
             }
@@ -57,50 +55,65 @@ class BroadcastController extends Controller
         })->filter(function ($num) {
             return strlen($num) >= 10;
         })->unique()->values()->toArray();
+    }
+
+    /**
+     * Endpoint untuk preview estimasi jumlah nomor unik valid sebelum broadcast dikirim.
+     */
+    public function preview(Request $request): JsonResponse
+    {
+        $target = $request->query('target', 'donatur');
+        if (! in_array($target, ['donatur', 'kunjungan', 'semua'])) {
+            $target = 'donatur';
+        }
+
+        $validNumbers = $this->getTargetNumbers($target);
+
+        return $this->successResponse([
+            'target' => $target,
+            'total_target' => count($validNumbers),
+        ], 'Estimasi jumlah penerima broadcast berhasil dihitung.');
+    }
+
+    /**
+     * Mengirim pesan broadcast ke queue background dengan delay bertingkat anti-banned.
+     */
+    public function send(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'pesan' => 'required|string',
+            'target_penerima' => 'required|in:donatur,kunjungan,semua',
+        ]);
+
+        $validNumbers = $this->getTargetNumbers($validated['target_penerima']);
 
         if (empty($validNumbers)) {
             return $this->errorResponse('Tidak ada target nomor HP yang valid untuk dikirim.', 400);
         }
 
-        $gatewayUrl = config('services.whatsapp.url', env('WHATSAPP_GATEWAY_URL', 'http://shared_wa_gateway:3000'));
-        $endpoint = config('services.whatsapp.endpoint', env('WHATSAPP_GATEWAY_ENDPOINT', '/api/send-message'));
-        $sessionId = config('services.whatsapp.session_id', env('WHATSAPP_SESSION_ID', 'yamuti'));
-
-        if (! $gatewayUrl) {
-            return $this->errorResponse('Konfigurasi WHATSAPP_GATEWAY_URL belum diatur.', 500);
-        }
-
-        $successCount = 0;
-        $failedCount = 0;
-        $url = rtrim($gatewayUrl, '/').$endpoint;
+        $currentDelaySeconds = 0;
+        $totalQueued = 0;
 
         foreach ($validNumbers as $number) {
-            try {
-                $payload = [
-                    'number' => $number,
-                    'message' => $validated['pesan'],
-                ];
-                if ($sessionId) {
-                    $payload['sessionId'] = $sessionId;
-                }
+            // Tambahkan delay acak 3-5 detik per pesan agar aman dari rate limit & anti-spam WA
+            $stepDelay = rand(3, 5);
+            $currentDelaySeconds += $stepDelay;
 
-                $response = Http::timeout(10)->post($url, $payload);
-                if ($response->successful() && ($response->json('status') === true || $response->json('success') === true)) {
-                    $successCount++;
-                } else {
-                    $failedCount++;
-                }
-            } catch (\Exception $e) {
-                $failedCount++;
-                Log::error("Broadcast error to {$number}: ".$e->getMessage());
-            }
+            SendWhatsAppMessage::dispatch($number, $validated['pesan'], true)
+                ->delay(now()->addSeconds($currentDelaySeconds));
+
+            $totalQueued++;
         }
+
+        Log::info("Broadcast WhatsApp dijadwalkan ke queue untuk {$totalQueued} kontak target: {$validated['target_penerima']}");
 
         return $this->successResponse([
             'pesan' => $validated['pesan'],
-            'total_target' => count($validNumbers),
-            'berhasil' => $successCount,
-            'gagal' => $failedCount,
-        ], "Pesan broadcast diproses. Berhasil: {$successCount}, Gagal/Pending: {$failedCount}");
+            'total_target' => $totalQueued,
+            'berhasil' => $totalQueued,
+            'gagal' => 0,
+            'status' => 'QUEUED',
+            'estimasi_selesai_menit' => ceil($currentDelaySeconds / 60),
+        ], "Alhamdulillah! Pesan broadcast dijadwalkan ke antrean untuk {$totalQueued} nomor penerima (estimasi selesai ~".ceil($currentDelaySeconds / 60).' menit).');
     }
 }

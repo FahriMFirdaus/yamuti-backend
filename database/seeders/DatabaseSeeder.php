@@ -38,7 +38,10 @@ class DatabaseSeeder extends Seeder
         );
         $admin->assignRole($adminRole);
 
-        // 3. Generate Data Palsu (Dummy) untuk Keperluan Frontend
+        // 3. Inisialisasi Akuntansi Nirlaba (COA)
+        $this->call(ChartOfAccountSeeder::class);
+
+        // 4. Generate Data Palsu (Dummy) untuk Keperluan Frontend
         $this->call([
             AnakAsuhSeeder::class,
             KampanyeSeeder::class,

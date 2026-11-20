@@ -45,4 +45,9 @@ class OrangTuaAsuh extends Model
     {
         return $this->belongsTo(AnakAsuh::class, 'anak_asuh_id');
     }
+
+    public function donasis()
+    {
+        return $this->hasMany(Donasi::class, 'orang_tua_asuh_id');
+    }
 }

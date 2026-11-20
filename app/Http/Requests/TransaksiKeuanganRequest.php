@@ -16,8 +16,11 @@ class TransaksiKeuanganRequest extends FormRequest
         return [
             'jenis_kas' => ['required', 'string'],
             'tipe_transaksi' => ['required', 'string', 'in:Debit,Kredit'],
+            'kategori_pengeluaran' => ['nullable', 'string', 'max:100'],
             'nominal' => ['required', 'numeric', 'min:100'],
             'deskripsi' => ['required', 'string'],
+            'bukti_transaksi' => ['nullable', 'string'],
+            'kampanye_id' => ['nullable', 'exists:kampanyes,id'],
         ];
     }
 }

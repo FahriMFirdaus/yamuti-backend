@@ -47,6 +47,16 @@ class DonasiController extends Controller
             $validatedData['is_anonymous'] = 'false';
         }
 
+        // Upload bukti transfer jika dilampirkan
+        if ($request->hasFile('bukti_transfer')) {
+            try {
+                $path = $request->file('bukti_transfer')->store('donasi/bukti', 's3');
+            } catch (\Throwable $e) {
+                $path = $request->file('bukti_transfer')->store('donasi/bukti', 'public');
+            }
+            $validatedData['bukti_transfer'] = $path;
+        }
+
         $data = $this->donasiService->createDonasi($validatedData, $userId);
 
         return $this->successResponse($data, 'Donasi berhasil dicatat', 201);
@@ -56,9 +66,21 @@ class DonasiController extends Controller
     {
         // Khusus untuk Admin yang menginput donasi tunai/cash
         $userId = $request->user('sanctum')?->id;
-        $data = $this->donasiService->createDonasiManual($request->validated(), $userId);
+        $validatedData = $request->validated();
 
-        return $this->successResponse($data, 'Donasi tunai berhasil dicatat dan diverifikasi', 201);
+        // Upload bukti transfer fisik jika ada
+        if ($request->hasFile('bukti_transfer')) {
+            try {
+                $path = $request->file('bukti_transfer')->store('donasi/bukti', 's3');
+            } catch (\Throwable $e) {
+                $path = $request->file('bukti_transfer')->store('donasi/bukti', 'public');
+            }
+            $validatedData['bukti_transfer'] = $path;
+        }
+
+        $data = $this->donasiService->createDonasiManual($validatedData, $userId);
+
+        return $this->successResponse($data, 'Donasi manual berhasil dicatat dan diverifikasi', 201);
     }
 
     public function verify($id): JsonResponse

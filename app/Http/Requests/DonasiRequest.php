@@ -19,7 +19,9 @@ class DonasiRequest extends FormRequest
             'gross_amount' => ['required', 'numeric', 'min:10000'],
             'payment_type' => ['nullable', 'string', 'max:100'],
             'kampanye_id' => ['nullable', 'exists:kampanyes,id'],
+            'orang_tua_asuh_id' => ['nullable', 'exists:orang_tua_asuhs,id'],
             'pesan' => ['nullable', 'string', 'max:500'],
+            'bukti_transfer' => ['nullable', 'file', 'image', 'max:5120'],
             'is_anonymous' => ['nullable', 'boolean'],
         ];
     }

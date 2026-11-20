@@ -20,6 +20,7 @@ class Kunjungan extends Model
         'slot_waktu',
         'is_full_day',
         'status',
+        'catatan_admin',
         'branch_id',
         'approved_by',
     ];

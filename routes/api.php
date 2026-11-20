@@ -97,6 +97,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('transaksi-keuangan', TransaksiKeuanganController::class);
         Route::get('/keuangan/laporan', [TransaksiKeuanganController::class, 'laporan']);
 
+        // Akuntansi Nirlaba (ISAK 35)
+        Route::prefix('akuntansi')->group(function () {
+            Route::get('/coa', [\App\Http\Controllers\Api\AccountingController::class, 'coa']);
+            Route::get('/jurnal', [\App\Http\Controllers\Api\AccountingController::class, 'jurnal']);
+            Route::get('/buku-besar', [\App\Http\Controllers\Api\AccountingController::class, 'bukuBesar']);
+            Route::get('/neraca', [\App\Http\Controllers\Api\AccountingController::class, 'neraca']);
+            Route::get('/laporan-aktivitas', [\App\Http\Controllers\Api\AccountingController::class, 'laporanAktivitas']);
+        });
+
         // Epic 3.1: Artikel & Galeri (Hanya Hak Tulis/Ubah untuk Admin)
         Route::post('/artikel/upload-image', [ArtikelController::class, 'uploadImage']);
         Route::apiResource('kategori-artikel', KategoriArtikelController::class)->except(['index', 'show']);
@@ -109,6 +118,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/kampanye/updates/{id}', [KampanyeUpdateController::class, 'destroy']);
 
         // Broadcast
+        Route::get('/broadcast/preview', [BroadcastController::class, 'preview']);
         Route::post('/broadcast/send', [BroadcastController::class, 'send'])->middleware('throttle:broadcast');
 
         // Donasi & Kas
@@ -183,6 +193,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/orang-tua-asuh', [OrangTuaAsuhController::class, 'saya']);
     Route::get('/user/anak-asuh-tersedia', [OrangTuaAsuhController::class, 'availableAnakAsuh']);
     Route::post('/user/orang-tua-asuh', [OrangTuaAsuhController::class, 'daftarMandiri']);
+    Route::post('/user/orang-tua-asuh/bayar-kolektif', [OrangTuaAsuhController::class, 'bayarKolektif']);
 
     // Keranjang Donasi
     Route::get('/keranjang/count', [KeranjangController::class, 'count']);

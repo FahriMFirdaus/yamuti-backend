@@ -15,11 +15,19 @@ class TransaksiKeuangan extends Model
         'branch_id',
         'jenis_kas',
         'tipe_transaksi',
+        'kategori_pengeluaran',
         'nominal',
         'deskripsi',
+        'bukti_transaksi',
+        'kampanye_id',
         'donasi_id',
         'created_by',
     ];
+
+    public function kampanye()
+    {
+        return $this->belongsTo(Kampanye::class);
+    }
 
     protected $appends = ['status', 'amountRaw'];
 
