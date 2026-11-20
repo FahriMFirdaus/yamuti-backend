@@ -25,8 +25,7 @@ class AnakAsuhService extends BaseService
         $data['created_by'] = $userId;
 
         if (isset($data['foto_identitas'])) {
-            $path = $data['foto_identitas']->store('identitas/anak_asuh', 's3');
-            $data['foto_identitas'] = Storage::disk('s3')->url($path);
+            $data['foto_identitas'] = \App\Helpers\StorageHelper::storeFile($data['foto_identitas'], 'identitas/anak_asuh');
         }
 
         return AnakAsuh::create($data);
@@ -38,8 +37,7 @@ class AnakAsuhService extends BaseService
         $data['updated_by'] = $userId;
 
         if (isset($data['foto_identitas'])) {
-            $path = $data['foto_identitas']->store('identitas/anak_asuh', 's3');
-            $data['foto_identitas'] = Storage::disk('s3')->url($path);
+            $data['foto_identitas'] = \App\Helpers\StorageHelper::storeFile($data['foto_identitas'], 'identitas/anak_asuh');
         }
 
         $anak->update($data);

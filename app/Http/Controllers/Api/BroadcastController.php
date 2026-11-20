@@ -91,21 +91,12 @@ class BroadcastController extends Controller
             return $this->errorResponse('Tidak ada target nomor HP yang valid untuk dikirim.', 400);
         }
 
-        $currentDelaySeconds = 0;
-        $totalQueued = 0;
+        $totalQueued = count($validNumbers);
 
-        foreach ($validNumbers as $number) {
-            // Tambahkan delay acak 3-5 detik per pesan agar aman dari rate limit & anti-spam WA
-            $stepDelay = rand(3, 5);
-            $currentDelaySeconds += $stepDelay;
+        // Delegasikan loop penjadwalan ke background worker agar HTTP request selesai instan (< 100ms)
+        \App\Jobs\ProcessBroadcastJob::dispatch($validNumbers, $validated['pesan'], $validated['target_penerima']);
 
-            SendWhatsAppMessage::dispatch($number, $validated['pesan'], true)
-                ->delay(now()->addSeconds($currentDelaySeconds));
-
-            $totalQueued++;
-        }
-
-        Log::info("Broadcast WhatsApp dijadwalkan ke queue untuk {$totalQueued} kontak target: {$validated['target_penerima']}");
+        Log::info("Broadcast WhatsApp didelegasikan ke ProcessBroadcastJob untuk {$totalQueued} kontak target: {$validated['target_penerima']}");
 
         return $this->successResponse([
             'pesan' => $validated['pesan'],
@@ -113,7 +104,7 @@ class BroadcastController extends Controller
             'berhasil' => $totalQueued,
             'gagal' => 0,
             'status' => 'QUEUED',
-            'estimasi_selesai_menit' => ceil($currentDelaySeconds / 60),
-        ], "Alhamdulillah! Pesan broadcast dijadwalkan ke antrean untuk {$totalQueued} nomor penerima (estimasi selesai ~".ceil($currentDelaySeconds / 60).' menit).');
+            'estimasi_selesai_menit' => ceil(($totalQueued * 4) / 60),
+        ], "Alhamdulillah! Pesan broadcast dijadwalkan ke antrean untuk {$totalQueued} nomor penerima.");
     }
 }
