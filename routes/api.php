@@ -25,6 +25,8 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SocialiteController;
 use App\Http\Controllers\Api\TransaksiKeuanganController;
+use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\PayrollController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -92,6 +94,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('inventaris', InventarisController::class);
         Route::get('/inventaris/{inventarisId}/mutasi', [MutasiBarangController::class, 'index']);
         Route::post('/inventaris/{inventarisId}/mutasi', [MutasiBarangController::class, 'store']);
+
+        // SDM & Payroll (Buku Induk Karyawan & Pengasuh + Slip Gaji)
+        Route::get('/karyawan/summary', [KaryawanController::class, 'summary']);
+        Route::apiResource('karyawan', KaryawanController::class);
+
+        Route::get('/payroll/summary', [PayrollController::class, 'summary']);
+        Route::post('/payroll/generate-bulk', [PayrollController::class, 'generateBulk']);
+        Route::post('/payroll/generate-periode', [PayrollController::class, 'generateBulk']);
+        Route::post('/payroll/{id}/approve', [PayrollController::class, 'approve']);
+        Route::post('/payroll/{id}/pay', [PayrollController::class, 'pay']);
+        Route::get('/payroll/{id}/slip', [PayrollController::class, 'slip']);
+        Route::apiResource('payroll', PayrollController::class);
 
         // Keuangan & Laporan
         Route::apiResource('transaksi-keuangan', TransaksiKeuanganController::class);

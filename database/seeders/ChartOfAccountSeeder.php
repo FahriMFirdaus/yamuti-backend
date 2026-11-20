@@ -38,6 +38,8 @@ class ChartOfAccountSeeder extends Seeder
             ['kode_akun' => '5-1004', 'nama_akun' => 'Beban Pemeliharaan Sarana & Prasarana', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit', 'deskripsi' => 'Renovasi kecil, perbaikan AC, pompa air, dsb'],
             ['kode_akun' => '5-1005', 'nama_akun' => 'Beban Operasional IT, Server & Website', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit', 'deskripsi' => 'Hosting, domain, lisensi sistem, dan pemeliharaan IT'],
             ['kode_akun' => '5-1006', 'nama_akun' => 'Beban Administrasi & Umum', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit', 'deskripsi' => 'ATK, transportasi pengurus, dan keperluan legal'],
+            ['kode_akun' => '5-1007', 'nama_akun' => 'Beban Honor Pengasuh & Ustadz Santri', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit', 'deskripsi' => 'Honorarium dan tunjangan pengasuh asrama dan ustadz pengajar santri'],
+            ['kode_akun' => '5-1008', 'nama_akun' => 'Beban Honor Staf & Amil Yayasan', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit', 'deskripsi' => 'Gaji dan honorarium staf manajemen kantor, amil, dan operasional yayasan'],
         ];
 
         foreach ($accounts as $acc) {

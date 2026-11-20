@@ -6,6 +6,7 @@ use App\Models\ChartOfAccount;
 use App\Models\Donasi;
 use App\Models\JurnalItem;
 use App\Models\JurnalUmum;
+use App\Models\Payroll;
 use App\Models\TransaksiKeuangan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -205,6 +206,108 @@ class AccountingService
                     'memo' => $kas->deskripsi,
                 ]);
             }
+
+            return $jurnal;
+        });
+    }
+
+    /**
+     * Otomatis posting jurnal saat payroll dibayarkan (ISAK 35)
+     */
+    public function recordPayrollJournal(Payroll $payroll, string $akunKasKode = '1-1003', ?string $tanggalBayar = null, ?string $userId = null): ?JurnalUmum
+    {
+        // 1. Strict Idempotency: jika sudah pernah dicatat untuk payroll ini, return existing
+        $existing = JurnalUmum::where('sumber_transaksi', 'Payroll')
+            ->where('referensi_id', $payroll->id)
+            ->first();
+
+        if ($existing) {
+            if ($payroll->jurnal_umum_id !== $existing->id) {
+                $payroll->updateQuietly(['jurnal_umum_id' => $existing->id]);
+            }
+            return $existing;
+        }
+
+        return DB::transaction(function () use ($payroll, $akunKasKode, $tanggalBayar, $userId) {
+            $nomorRef = 'JUR-PAY-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+            $karyawan = $payroll->karyawan;
+            $namaKaryawan = $karyawan ? $karyawan->nama_lengkap : 'Karyawan';
+            $jabatan = $karyawan ? $karyawan->jabatan : '';
+            $tipeSdm = $karyawan ? $karyawan->tipe_sdm : 'Pengasuh/Ustadz';
+            $tglTransaksi = $tanggalBayar ?: ($payroll->tanggal_pembayaran ? Carbon::parse($payroll->tanggal_pembayaran)->toDateString() : now()->toDateString());
+
+            $keterangan = "Pembayaran Gaji Periode {$payroll->periode_bulan}/{$payroll->periode_tahun} a.n {$namaKaryawan} ({$jabatan})";
+
+            $jurnal = JurnalUmum::create([
+                'id' => (string) Str::uuid(),
+                'nomor_referensi' => $nomorRef,
+                'tanggal_transaksi' => $tglTransaksi,
+                'keterangan' => $keterangan,
+                'sumber_transaksi' => 'Payroll',
+                'referensi_id' => $payroll->id,
+                'created_by' => $userId ?? $payroll->dibayar_oleh ?? auth()->id(),
+            ]);
+
+            // 1. Tentukan Akun Beban (Debit)
+            // 5-1007 untuk Pengasuh/Ustadz, 5-1008 untuk Staf/Amil
+            $kodeBeban = ($tipeSdm === 'Pengasuh/Ustadz') ? '5-1007' : '5-1008';
+            $bebanAccount = ChartOfAccount::where('kode_akun', $kodeBeban)->first();
+            if (! $bebanAccount) {
+                $bebanAccount = ChartOfAccount::where('tipe_akun', 'Beban')->first();
+            }
+
+            // 2. Tentukan Akun Kas/Bank (Kredit)
+            $kasAccount = null;
+            if ($payroll->kas_bank_akun_id) {
+                $kasAccount = ChartOfAccount::find($payroll->kas_bank_akun_id);
+            }
+            if (! $kasAccount && $akunKasKode) {
+                $kasAccount = ChartOfAccount::where('kode_akun', $akunKasKode)->first();
+            }
+            if (! $kasAccount) {
+                $kodeKas = str_contains(strtolower($payroll->metode_pembayaran ?? ''), 'tunai') ? '1-1001' : '1-1003';
+                $kasAccount = ChartOfAccount::where('kode_akun', $kodeKas)->first()
+                    ?: ChartOfAccount::where('tipe_akun', 'Aset')->first();
+            }
+
+            $nominal = (float) $payroll->gaji_bersih;
+
+            // Debit Entry: Beban Bertambah
+            JurnalItem::create([
+                'id' => (string) Str::uuid(),
+                'jurnal_umum_id' => $jurnal->id,
+                'chart_of_account_id' => $bebanAccount->id,
+                'debit' => $nominal,
+                'kredit' => 0,
+                'memo' => "Beban Gaji {$namaKaryawan} ({$payroll->periode_bulan}/{$payroll->periode_tahun})",
+            ]);
+
+            // Kredit Entry: Kas/Bank Berkurang
+            JurnalItem::create([
+                'id' => (string) Str::uuid(),
+                'jurnal_umum_id' => $jurnal->id,
+                'chart_of_account_id' => $kasAccount->id,
+                'debit' => 0,
+                'kredit' => $nominal,
+                'memo' => "Pengeluaran Gaji a.n {$namaKaryawan} via " . ($kasAccount->nama_akun ?? $payroll->metode_pembayaran),
+            ]);
+
+            // Update Payroll link
+            $payroll->updateQuietly([
+                'jurnal_umum_id' => $jurnal->id,
+                'kas_bank_akun_id' => $kasAccount->id,
+            ]);
+
+            // 3. Catat di transaksi_keuangans untuk sinkronisasi buku kas operasional (/admin/kas)
+            $namaKas = ($kasAccount && str_contains(strtolower($kasAccount->nama_akun), 'bsi')) ? 'Bank BSI' : 'Kas Tunai Yayasan';
+            TransaksiKeuangan::create([
+                'jenis_kas' => $namaKas,
+                'tipe_transaksi' => 'Kredit',
+                'nominal' => $nominal,
+                'kategori_pengeluaran' => 'Beban Honor & Gaji',
+                'deskripsi' => "Pembayaran Gaji {$namaKaryawan} Periode {$payroll->periode_bulan}/{$payroll->periode_tahun} (Slip: {$payroll->nomor_slip})",
+                'created_by' => $userId ?? $payroll->dibayar_oleh ?? auth()->id(),
+            ]);
 
             return $jurnal;
         });
