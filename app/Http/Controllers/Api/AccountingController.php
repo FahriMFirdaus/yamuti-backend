@@ -64,6 +64,71 @@ class AccountingController extends Controller
     }
 
     /**
+     * Catat Jurnal Penyesuaian / Jurnal Manual Baru (Debit & Kredit Seimbang)
+     */
+    public function storeJurnalManual(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tanggal_transaksi' => 'required|date',
+            'keterangan' => 'required|string|max:255',
+            'items' => 'required|array|min:2',
+            'items.*.chart_of_account_id' => 'required|uuid|exists:chart_of_accounts,id',
+            'items.*.debit' => 'required|numeric|min:0',
+            'items.*.kredit' => 'required|numeric|min:0',
+            'items.*.memo' => 'nullable|string|max:255',
+        ]);
+
+        $totalDebit = 0;
+        $totalKredit = 0;
+
+        foreach ($validated['items'] as $item) {
+            $totalDebit += (float) $item['debit'];
+            $totalKredit += (float) $item['kredit'];
+        }
+
+        if (round($totalDebit, 2) !== round($totalKredit, 2)) {
+            return $this->errorResponse('Total Debit dan Total Kredit harus seimbang (Balance).', 422, [
+                'total_debit' => $totalDebit,
+                'total_kredit' => $totalKredit,
+                'selisih' => abs($totalDebit - $totalKredit),
+            ]);
+        }
+
+        if ($totalDebit <= 0) {
+            return $this->errorResponse('Nominal jurnal tidak boleh bernilai nol.', 422);
+        }
+
+        $jurnal = DB::transaction(function () use ($validated, $totalDebit, $request) {
+            $nomorRef = 'JU-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
+
+            $jurnalUmum = JurnalUmum::create([
+                'nomor_referensi' => $nomorRef,
+                'tanggal_transaksi' => $validated['tanggal_transaksi'],
+                'keterangan' => $validated['keterangan'],
+                'tipe_referensi' => 'manual',
+                'referensi_id' => null,
+                'total_debit' => $totalDebit,
+                'total_kredit' => $totalDebit,
+                'created_by' => $request->user()?->id,
+            ]);
+
+            foreach ($validated['items'] as $item) {
+                JurnalItem::create([
+                    'jurnal_umum_id' => $jurnalUmum->id,
+                    'chart_of_account_id' => $item['chart_of_account_id'],
+                    'debit' => (float) $item['debit'],
+                    'kredit' => (float) $item['kredit'],
+                    'memo' => $item['memo'] ?? null,
+                ]);
+            }
+
+            return $jurnalUmum->load('items.account');
+        });
+
+        return $this->successResponse($jurnal, 'Jurnal penyesuaian manual berhasil dicatat', 201);
+    }
+
+    /**
      * Buku Besar (General Ledger) per Akun
      */
     public function bukuBesar(Request $request): JsonResponse

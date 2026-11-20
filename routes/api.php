@@ -101,6 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('akuntansi')->group(function () {
             Route::get('/coa', [\App\Http\Controllers\Api\AccountingController::class, 'coa']);
             Route::get('/jurnal', [\App\Http\Controllers\Api\AccountingController::class, 'jurnal']);
+            Route::post('/jurnal', [\App\Http\Controllers\Api\AccountingController::class, 'storeJurnalManual']);
             Route::get('/buku-besar', [\App\Http\Controllers\Api\AccountingController::class, 'bukuBesar']);
             Route::get('/neraca', [\App\Http\Controllers\Api\AccountingController::class, 'neraca']);
             Route::get('/laporan-aktivitas', [\App\Http\Controllers\Api\AccountingController::class, 'laporanAktivitas']);
