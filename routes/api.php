@@ -120,6 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/buku-besar', [\App\Http\Controllers\Api\AccountingController::class, 'bukuBesar']);
             Route::get('/neraca', [\App\Http\Controllers\Api\AccountingController::class, 'neraca']);
             Route::get('/laporan-aktivitas', [\App\Http\Controllers\Api\AccountingController::class, 'laporanAktivitas']);
+            Route::get('/arus-kas', [\App\Http\Controllers\Api\AccountingController::class, 'arusKas']);
         });
 
         // Epic 3.1: Artikel & Galeri (Hanya Hak Tulis/Ubah untuk Admin)
